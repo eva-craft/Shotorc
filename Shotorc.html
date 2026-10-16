@@ -1,0 +1,3370 @@
+<!DOCTYPE html>
+<!-- saved from url=(0076)file:///C:/Users/Notebook/Downloads/deepseek_html_20261010_c514ec%20(1).html -->
+<html lang="ru"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Orcs VS Everybody — Warcraft III Edition</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
+  html, body { background:#000; overflow:hidden; font-family:'Trebuchet MS','Segoe UI',sans-serif; height:100%; }
+  canvas { display:block; width:100vw; height:100vh; cursor:crosshair; }
+  #overlay {
+    position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(0,0,0,0.88); color:#fff; z-index:10; text-align:center;
+    font-family:'Trebuchet MS',sans-serif; padding:20px;
+  }
+  #overlay.hidden { display:none; }
+  #overlay .panel {
+    max-width:820px; max-height:90vh; overflow-y:auto;
+    background:linear-gradient(180deg,#3a2a18,#1a1008);
+    border:4px solid #8a6a30;
+    border-radius:12px;
+    padding:28px 32px;
+    box-shadow:0 0 60px rgba(255,150,50,0.4), inset 0 0 40px rgba(0,0,0,0.6);
+    position:relative;
+  }
+  #overlay .panel::before {
+    content:''; position:absolute; inset:6px;
+    border:1px solid rgba(200,160,80,0.4);
+    border-radius:8px; pointer-events:none;
+  }
+  #overlay h1 { font-size:42px; margin-bottom:16px; color:#ffd070;
+    text-shadow:0 0 20px #ff6600, 2px 2px 0 #000, 0 0 4px #000;
+    letter-spacing:1px; }
+  #overlay h2 { font-size:22px; margin:14px 0 8px; color:#e0b060;
+    text-shadow:1px 1px 0 #000; }
+  #overlay p { font-size:15px; line-height:1.55; margin-bottom:12px; color:#ddd;
+    text-shadow:1px 1px 0 #000; }
+  #overlay button {
+    padding:12px 26px; font-size:17px; font-weight:bold;
+    background:linear-gradient(180deg,#e0b060,#8a5a20);
+    color:#2a1808; border:2px solid #2a1808; border-radius:8px; cursor:pointer;
+    box-shadow:0 3px 0 #2a1808, 0 4px 16px rgba(255,150,50,0.5);
+    transition:transform .08s, filter .15s;
+    margin:6px 4px; font-family:inherit;
+    text-shadow:0 1px 0 rgba(255,255,255,0.3);
+  }
+  #overlay button:hover { filter:brightness(1.15); }
+  #overlay button:active { transform:translateY(2px); box-shadow:0 1px 0 #2a1808; }
+  #overlay button:disabled { opacity:0.4; cursor:not-allowed; }
+  #overlay .levels { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:16px; }
+  #overlay .lvl {
+    padding:10px 14px; border-radius:8px; cursor:pointer; font-weight:bold;
+    border:2px solid #6a4a20; background:linear-gradient(180deg,#2a1a0a,#1a0f05);
+    color:#c0a070; min-width:150px;
+    transition:all .15s;
+    text-shadow:1px 1px 0 #000;
+  }
+  #overlay .lvl:hover { border-color:#ffd070; color:#ffd070; }
+  #overlay .lvl.done { border-color:#3a8a3a; color:#8f8; background:linear-gradient(180deg,#1a2a1a,#0a1a0a); }
+  #overlay .lvl.current { border-color:#ffd070; color:#ffd070; background:linear-gradient(180deg,#3a2a0a,#1a0f05); box-shadow:0 0 14px rgba(255,200,80,0.6); }
+
+  .shop-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin-top:14px; }
+  .shop-item {
+    background:linear-gradient(180deg,#2a1a0a,#140a04);
+    border:2px solid #6a4a20; border-radius:8px; padding:12px;
+    text-align:left; position:relative;
+  }
+  .shop-item.disabled { opacity:0.45; }
+  .shop-item h3 { color:#ffd070; font-size:15px; margin-bottom:6px; text-shadow:1px 1px 0 #000; }
+  .shop-item p { color:#bbb; font-size:12px; margin-bottom:10px; }
+  .shop-item button { padding:6px 14px; font-size:13px; margin:0; }
+  .shop-item .price { color:#ffd070; font-weight:bold; }
+  .shop-gold { color:#ffd070; font-size:18px; font-weight:bold; text-shadow:1px 1px 0 #000; }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="1280" height="559"></canvas>
+
+<div id="overlay">
+  <div class="panel" id="overlayPanel"><h1>Orcs VS Everybody</h1><p style="font-size:15px;color:#e0b060">Кампания из 6 уровней. Орки идут по миру, собирая союзников.</p><p style="font-size:12px;color:#aaa">Управление: A/D — ходьба, W — прыжок, ЛКМ зажать — прицел, отпустить — выстрел. Клавиши 1-4 — выбор юнита, E — пропуск, Tab — оружие.</p><p style="font-size:13px;color:#ffd070">Золото: 0</p><div class="levels"><div class="lvl current" data-idx="0">1. Чудесные Леса</div><div class="lvl " data-idx="1">2. Королевство Ксарот</div><div class="lvl " data-idx="2">3. Горы Бюн</div><div class="lvl " data-idx="3">4. Вечное Море</div><div class="lvl " data-idx="4">5. Квель-Сидай</div><div class="lvl " data-idx="5">6. Пустыня Арам'Набау</div></div><button id="btnStart" style="margin-top:16px">Начать кампанию</button><button id="btnReset" style="margin-top:16px;font-size:13px;background:linear-gradient(180deg,#a04040,#5a1010);color:#fff">Сбросить прогресс</button></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+// ============================================================
+//  КОНСТАНТЫ
+// ============================================================
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const GRAVITY = 0.35;
+const MAX_HEALTH = 100;
+const UNIT_RADIUS = 16;
+const TERRAIN_STEP = 4;
+const DESTRUCTION_SCALE = 1;
+
+const AIM_DIST_MIN = 40;
+const AIM_DIST_MAX = 340;
+const AIM_POWER_MIN = 15;
+const AIM_POWER_MAX = 100;
+
+const BOTTOM_PANEL_H = 138;
+const TOP_PANEL_H = 64;
+
+let WORLD_WIDTH = 1280;
+let WORLD_HEIGHT = 720;
+
+// ============================================================
+//  КЛАССЫ ОРКОВ
+// ============================================================
+const ORC_CLASSES = {
+  warlord:  { name:'Вождь',    weapon:'axe',   hp:120, moveMax:720, dmgMul:1.0,  abilities:['bloodlust','warcry'] },
+  berserker:{ name:'Берсерк',  weapon:'axe',   hp:95,  moveMax:900, dmgMul:1.35, abilities:['bloodlust'] },
+  shaman:   { name:'Шаман',    weapon:'staff', hp:85,  moveMax:650, dmgMul:0.9,  abilities:['bloodlust','heal'] },
+  hunter:   { name:'Охотник',  weapon:'bow',   hp:90,  moveMax:800, dmgMul:1.15, abilities:['bloodlust'] }
+};
+
+// ============================================================
+//  СПОСОБНОСТИ
+// ============================================================
+const ABILITIES = {
+  bloodlust:    { key:'bloodlust',    name:'Кровожадность',  desc:'+50% урона и +2 к дальности хода на 1 ход.', cooldown:4, target:'self',  color1:'#ff3030', color2:'#7a0000', icon:'rage' },
+  warcry:       { key:'warcry',       name:'Боевой клич',    desc:'+25% урона всем союзникам рядом.',           cooldown:5, target:'self',  color1:'#ff8040', color2:'#7a2000', icon:'warcry' },
+  heal:         { key:'heal',         name:'Исцеление',      desc:'Восстанавливает 40 HP выбранному союзнику.', cooldown:3, target:'ally',  color1:'#80ff80', color2:'#0a4a0a', icon:'heal' },
+  burrow:       { key:'burrow',       name:'Зарыться',       desc:'Неуязвимость на 1 ход.',                     cooldown:4, target:'self',  color1:'#a07a3a', color2:'#3a2010', icon:'burrow' },
+  invisibility: { key:'invisibility', name:'Невидимость',    desc:'Стать невидимым, атака критическая.',        cooldown:4, target:'self',  color1:'#88aaff', color2:'#1a2a6a', icon:'invis' },
+  ogreSmash:    { key:'ogreSmash',    name:'Удар по площади',desc:'Урон всем вокруг. Теряешь 20 HP.',           cooldown:3, target:'self',  color1:'#ffaa44', color2:'#6a2a00', icon:'smash' },
+  prayer:       { key:'prayer',       name:'Молитва Свету',  desc:'+30 HP всем союзникам.',                     cooldown:4, target:'self',  color1:'#fff0a0', color2:'#8a6a00', icon:'prayer' },
+  rejuvenation: { key:'rejuvenation', name:'Омоложение',     desc:'Лечит союзников и снимает сон.',             cooldown:4, target:'self',  color1:'#a0ffa0', color2:'#0a4a0a', icon:'rejuv' },
+  teleport:     { key:'teleport',     name:'Телепортация',   desc:'Перенестись в указанную точку.',             cooldown:5, target:'point', color1:'#c080ff', color2:'#3a1a6a', icon:'teleport' },
+  stoneskin:    { key:'stoneskin',    name:'Каменная кожа',  desc:'Неуязвимость на 2 хода.',                    cooldown:5, target:'self',  color1:'#c8c8c8', color2:'#4a4a4a', icon:'stone' }
+};
+
+const RACE_ABILITIES = {
+  orc:    ['bloodlust'],
+  troll:  ['bloodlust','invisibility'],
+  goblin: ['bloodlust','burrow'],
+  ogre:   ['bloodlust','ogreSmash'],
+  humans: ['prayer'],
+  elves:  ['rejuvenation'],
+  gnomes: ['teleport','stoneskin'],
+  dwarves:['stoneskin'],
+  merfolk:['prayer'],
+  ogres:  ['ogreSmash']
+};
+
+// ============================================================
+//  УРОВНИ
+// ============================================================
+const LEVELS = [
+  { id:'forest', name:'Чудесные Леса', hint:'Орки против людей',
+    sky:['#0a1a2a','#1a3a5a','#2a4a3a'], ground:'#3a5a2a', groundEdge:'#2a4a1a',
+    accent:'#7fd67f', enemies:'humans', stars:true, clouds:4, fog:'rgba(120,200,140,0.06)',
+    reward: 120 },
+  { id:'ksarot', name:'Королевство Ксарот', hint:'Орки против людей',
+    sky:['#1a2a0a','#3a5a1a','#6a8a2a'], ground:'#4a6a2a', groundEdge:'#2a4a1a',
+    accent:'#d4af37', enemies:'humans', stars:false, clouds:5, fog:'rgba(220,200,120,0.05)',
+    reward: 160 },
+  { id:'byun', name:'Горы Бюн', hint:'Орки+тролли против гномов и дворфов',
+    sky:['#1a1a2a','#2a2a4a','#4a4a6a'], ground:'#5a5a6a', groundEdge:'#3a3a4a',
+    accent:'#a0c0ff', enemies:'gnomes', stars:true, clouds:2, fog:'rgba(160,180,220,0.06)',
+    reward: 200 },
+  { id:'sea', name:'Вечное Море', hint:'Орки+гоблины против русалок и наг',
+    sky:['#001a2a','#003a5a','#006a8a'], ground:'#1a4a6a', groundEdge:'#0a2a4a',
+    accent:'#66ddff', enemies:'merfolk', stars:false, clouds:3, fog:'rgba(120,220,255,0.07)',
+    reward: 240 },
+  { id:'quel', name:'Квель-Сидай', hint:'Орки+огры против высших эльфов',
+    sky:['#0a0a2a','#1a1a4a','#3a2a6a'], ground:'#3a2a5a', groundEdge:'#1a0a3a',
+    accent:'#c080ff', enemies:'elves', stars:true, clouds:4, fog:'rgba(200,150,255,0.06)',
+    reward: 300 },
+  { id:'aram', name:"Пустыня Арам'Набау", hint:'Финальная битва против огров',
+    sky:['#2a1a0a','#5a3a1a','#8a6a2a'], ground:'#c8a060', groundEdge:'#8a6a30',
+    accent:'#ffcc66', enemies:'ogres', stars:false, clouds:2, fog:'rgba(255,200,120,0.05)',
+    reward: 500 }
+];
+
+// ============================================================
+//  ГЛОБАЛЬНОЕ СОСТОЯНИЕ
+// ============================================================
+let currentLevelIndex = 0;
+let level = LEVELS[0];
+
+let currentTeam = 'orc';
+let currentUnitId = null;
+let turnState = 'aiming';
+let projectile = null;
+let explosion = null;
+let gameMessage = '';
+let messageTimer = 0;
+let winner = null;
+let keys = {};
+let mouse = { worldX:0, worldY:0, down:false, distFromUnit: 0 };
+let units = [];
+let particles = [];
+let decals = [];
+let healEffect = null;
+let charging = false;
+
+let pendingEnd = false;
+let endTimer = 0;
+let inputLockUntil = 0;
+
+let terrain = [];
+let holes = [];
+let objects = [];
+
+let aiThinking = false;
+let aiTimer = 0;
+let aiPhase = '';
+
+let time = 0;
+let gameLoopRunning = false;
+
+let terrainCanvas = null;
+let terrainCtx = null;
+
+let weatherParticles = [];
+
+// UI
+let unitPanelRects = [];
+let abilityRects = [];
+let skipBtnRect = null;
+let teleportMode = false;
+let teleportUnitId = null;
+let healMode = false;
+let healUnitId = null;
+
+// камера
+let camShake = 0;
+let camShakeX = 0, camShakeY = 0;
+let slowmoTimer = 0;
+
+let tooltip = null;
+let journal = [];
+
+// звук
+let audioCtx = null;
+let masterGain = null;
+let soundEnabled = true;
+
+// прогресс
+let progress = {
+  gold: 0,
+  reputation: {},
+  upgrades: { hp:0, dmg:0, speed:0, gold:0 },
+  completed: []
+};
+
+// ============================================================
+//  АУДИО
+// ============================================================
+function initAudio(){
+  if(audioCtx) return;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0.35;
+    masterGain.connect(audioCtx.destination);
+  } catch(e){ audioCtx = null; }
+}
+function playTone(freq, dur, type, vol, sweepTo){
+  if(!soundEnabled || !audioCtx) return;
+  try {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = type || 'square';
+    o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    if(sweepTo) o.frequency.exponentialRampToValueAtTime(sweepTo, audioCtx.currentTime + dur);
+    g.gain.setValueAtTime(vol || 0.15, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    o.connect(g); g.connect(masterGain);
+    o.start(); o.stop(audioCtx.currentTime + dur);
+  } catch(e){}
+}
+function playNoise(dur, vol, filterFreq){
+  if(!soundEnabled || !audioCtx) return;
+  try {
+    const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * dur, audioCtx.sampleRate);
+    const data = buf.getChannelData(0);
+    for(let i=0;i<data.length;i++) data[i] = Math.random()*2-1;
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(vol || 0.2, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    const f = audioCtx.createBiquadFilter();
+    f.type = 'lowpass'; f.frequency.value = filterFreq || 800;
+    src.connect(f); f.connect(g); g.connect(masterGain);
+    src.start(); src.stop(audioCtx.currentTime + dur);
+  } catch(e){}
+}
+const SFX = {
+  shoot(){ playTone(700, 0.08, 'square', 0.12, 200); },
+  hit(){ playNoise(0.15, 0.25, 500); playTone(180, 0.1, 'sawtooth', 0.1, 60); },
+  explode(){ playNoise(0.4, 0.4, 300); playTone(90, 0.4, 'sawtooth', 0.2, 30); },
+  step(){ playTone(120, 0.04, 'triangle', 0.04); },
+  death(){ playTone(300, 0.5, 'sawtooth', 0.15, 60); },
+  heal(){ playTone(660, 0.3, 'sine', 0.15, 990); },
+  click(){ playTone(900, 0.04, 'square', 0.1); },
+  win(){ [523,659,784,1047].forEach((f,i) => setTimeout(() => playTone(f, 0.2, 'sine', 0.18), i*90)); },
+  lose(){ [392,349,294,196].forEach((f,i) => setTimeout(() => playTone(f, 0.3, 'sine', 0.18), i*140)); },
+  ability(){ playTone(880, 0.15, 'sine', 0.16, 1400); }
+};
+
+// ============================================================
+//  СОХРАНЕНИЕ
+// ============================================================
+function saveProgress(){
+  try {
+    localStorage.setItem('orcsvs_progress', JSON.stringify(progress));
+    localStorage.setItem('orcsvs_level', String(currentLevelIndex));
+  } catch(e){}
+}
+function loadProgress(){
+  try {
+    const p = localStorage.getItem('orcsvs_progress');
+    if(p) progress = Object.assign(progress, JSON.parse(p));
+    const l = localStorage.getItem('orcsvs_level');
+    if(l){ const n = parseInt(l); if(!isNaN(n)) currentLevelIndex = n; }
+  } catch(e){}
+  // гарантируем структуру
+  if(!progress.upgrades) progress.upgrades = { hp:0, dmg:0, speed:0, gold:0 };
+  if(!progress.completed) progress.completed = [];
+  if(!progress.reputation) progress.reputation = {};
+}
+
+// ============================================================
+//  УТИЛИТЫ
+// ============================================================
+function rand(a,b){ return a + Math.random()*(b-a); }
+function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+
+function addJournal(msg, color){
+  journal.unshift({ text: msg, color: color||'#d0b080' });
+  if(journal.length > 30) journal.pop();
+}
+
+// ============================================================
+//  РЕЛЬЕФ
+// ============================================================
+function generateTerrain(){
+  terrain = []; holes = []; objects = []; decals = [];
+
+  const points = Math.max(8, Math.floor(WORLD_WIDTH / 40));
+  const step = WORLD_WIDTH / points;
+  const base = WORLD_HEIGHT * 0.70;
+
+  let heights = [];
+  let y = base;
+  for(let i=0;i<=points;i++){
+    let amp = 40;
+    if(level.id === 'byun') amp = 90;
+    if(level.id === 'sea') amp = 25;
+    if(level.id === 'quel') amp = 55;
+    if(level.id === 'aram') amp = 35;
+    y += (Math.random()-0.5)*amp;
+    y = clamp(y, WORLD_HEIGHT*0.35, WORLD_HEIGHT*0.88);
+    heights.push(y);
+  }
+  for(let pass=0; pass<3; pass++){
+    const nh = heights.slice();
+    for(let i=1;i<heights.length-1;i++) nh[i] = (heights[i-1]+heights[i]+heights[i+1])/3;
+    heights = nh;
+  }
+  for(let i=6; i<points-6; i+=9){
+    if(Math.random() < 0.4){
+      const v = heights[i];
+      for(let j=-3;j<=3;j++) if(i+j>=0 && i+j<heights.length) heights[i+j] = v;
+    } else {
+      for(let j=-3;j<=3;j++){
+        if(i+j>=0 && i+j<heights.length) heights[i+j] += 25 - Math.abs(j)*6;
+      }
+    }
+  }
+
+  for(let i=0;i<=points;i++) terrain.push({ x:i*step, y:heights[i] });
+  const detailed = [];
+  for(let i=0;i<terrain.length-1;i++){
+    const p1 = terrain[i], p2 = terrain[i+1];
+    const sub = Math.max(2, Math.floor((p2.x-p1.x)/TERRAIN_STEP));
+    for(let s=0;s<sub;s++){
+      const t = s/sub;
+      detailed.push({ x:p1.x+(p2.x-p1.x)*t, y:p1.y+(p2.y-p1.y)*t });
+    }
+  }
+  detailed.push(terrain[terrain.length-1]);
+  terrain = detailed;
+
+  const objCount = 6 + Math.floor(Math.random()*4);
+  for(let i=0;i<objCount;i++){
+    const x = rand(WORLD_WIDTH*0.2, WORLD_WIDTH*0.8);
+    const gy = getGroundY(x);
+    const type = pickObjectType();
+    const w = type === 'tree' ? 20 : 26;
+    const h = type === 'tree' ? 60 : 22;
+    objects.push({ x, y: gy - h, w, h, hp: 40, maxHp: 40, type, phase: Math.random()*Math.PI*2 });
+  }
+
+  weatherParticles = [];
+  const count = level.id === 'sea' ? 40 : (level.id === 'aram' ? 30 : 25);
+  for(let i=0;i<count;i++){
+    weatherParticles.push({
+      x: Math.random()*WORLD_WIDTH,
+      y: Math.random()*WORLD_HEIGHT,
+      vx: rand(-0.2, 0.2) + (level.id==='aram' ? 0.4 : 0),
+      vy: level.id==='sea' ? rand(-0.5,-0.1) : rand(0.05, 0.3),
+      r: rand(0.6, 2.2), a: rand(0.2, 0.8), phase: Math.random()*Math.PI*2,
+      kind: level.id==='sea' ? 'bubble' : (level.id==='aram' ? 'dust' : 'star')
+    });
+  }
+}
+
+function pickObjectType(){
+  switch(level.id){
+    case 'forest': return Math.random()<0.6 ? 'tree' : 'rock';
+    case 'ksarot': return Math.random()<0.5 ? 'tree' : 'crystal';
+    case 'byun':   return Math.random()<0.7 ? 'rock' : 'crystal';
+    case 'sea':    return Math.random()<0.6 ? 'coral' : 'rock';
+    case 'quel':   return Math.random()<0.6 ? 'tree' : 'crystal';
+    case 'aram':   return Math.random()<0.7 ? 'cactus' : 'rock';
+  }
+  return 'rock';
+}
+
+function getGroundY(x){
+  if(terrain.length === 0) return WORLD_HEIGHT*0.72;
+  if(x<0) x=0;
+  if(x>WORLD_WIDTH) x=WORLD_WIDTH;
+  for(let i=0;i<terrain.length-1;i++){
+    const p1 = terrain[i], p2 = terrain[i+1];
+    if(x>=p1.x && x<=p2.x){
+      const t = (x-p1.x)/((p2.x-p1.x)||1);
+      let y = p1.y + (p2.y-p1.y)*t;
+      for(const h of holes){
+        const dx = x - h.x;
+        if(Math.abs(dx) < h.r){
+          const dip = Math.sqrt(h.r*h.r - dx*dx);
+          const holeBottom = h.y + dip;
+          if(holeBottom > y) y = holeBottom;
+        }
+      }
+      return y;
+    }
+  }
+  return WORLD_HEIGHT*0.72;
+}
+
+function destroyTerrain(x, y, r){
+  r *= DESTRUCTION_SCALE;
+  holes.push({ x, y, r });
+  if(holes.length > 300) holes.shift();
+  for(const o of objects){
+    if(o.hp <= 0) continue;
+    const cx = o.x, cy = o.y + o.h/2;
+    const d = Math.hypot(cx-x, cy-y);
+    if(d < r + Math.max(o.w,o.h)/2){
+      o.hp -= 50 * (1 - d/(r + Math.max(o.w,o.h)/2));
+      if(o.hp <= 0) o.hp = 0;
+    }
+  }
+  decals.push({ type:'crater', x, y, r, alpha:0.6 });
+  if(decals.length > 200) decals.shift();
+}
+
+// ============================================================
+//  ЮНИТЫ
+// ============================================================
+const MIN_UNIT_DIST = UNIT_RADIUS * 2.6;
+
+function findFreeX(desiredX, placedXs, dir){
+  const margin = 30;
+  let x = clamp(desiredX, margin, WORLD_WIDTH - margin);
+  const step = 12; const d = dir || 1;
+  for(let a=0;a<80;a++){
+    let conflict = false;
+    for(const px of placedXs) if(Math.abs(x-px) < MIN_UNIT_DIST){ conflict = true; break; }
+    if(!conflict) return x;
+    x += step * d;
+    if(x < margin || x > WORLD_WIDTH - margin) break;
+  }
+  x = clamp(desiredX, margin, WORLD_WIDTH - margin);
+  for(let a=0;a<80;a++){
+    let conflict = false;
+    for(const px of placedXs) if(Math.abs(x-px) < MIN_UNIT_DIST){ conflict = true; break; }
+    if(!conflict) return x;
+    x -= step * d;
+    if(x < margin || x > WORLD_WIDTH - margin) break;
+  }
+  return clamp(x, margin, WORLD_WIDTH - margin);
+}
+
+function nextUnitId(){
+  let maxId = -1;
+  for(const u of units) if(u.id > maxId) maxId = u.id;
+  return maxId + 1;
+}
+
+function createUnits(){
+  units = [];
+  const orcNames = ['Вождь Драм','Крушор','Зугбад','Моор'];
+  const orcClasses = ['warlord','berserker','shaman','hunter'];
+  const placedAlly = [];
+
+  for(let i=0;i<4;i++){
+    const desiredX = WORLD_WIDTH*0.10 + i*WORLD_WIDTH*0.05;
+    const x = findFreeX(desiredX, placedAlly, +1);
+    placedAlly.push(x);
+    const cls = ORC_CLASSES[orcClasses[i]];
+    const hpBonus = (progress.upgrades.hp || 0) * 10;
+    units.push(makeUnit({
+      team:'orc', race:'orc', name:orcNames[i],
+      x, weapon: cls.weapon,
+      ammo: cls.weapon==='bow'?5:(cls.weapon==='staff'?5:0),
+      speed: 2.2 + (progress.upgrades.speed||0)*0.05,
+      moveMax: cls.moveMax,
+      hp: cls.hp + hpBonus,
+      orcClass: orcClasses[i],
+      abilities: cls.abilities.slice(),
+      dmgMul: cls.dmgMul * (1 + (progress.upgrades.dmg||0)*0.1)
+    }));
+  }
+
+  if(level.id === 'byun'){
+    for(let i=0;i<2;i++){
+      const desiredX = WORLD_WIDTH*0.16 + i*WORLD_WIDTH*0.04;
+      const x = findFreeX(desiredX, placedAlly, +1);
+      placedAlly.push(x);
+      units.push(makeUnit({
+        team:'orc', race:'troll', name:'Тролль '+(i+1),
+        x, weapon:'claw', ammo:0, speed:2.0, moveMax:700, hp:110
+      }));
+    }
+  }
+  if(level.id === 'sea'){
+    for(let i=0;i<2;i++){
+      const desiredX = WORLD_WIDTH*0.16 + i*WORLD_WIDTH*0.04;
+      const x = findFreeX(desiredX, placedAlly, +1);
+      placedAlly.push(x);
+      units.push(makeUnit({
+        team:'orc', race:'goblin', name:'Гоблин '+(i+1),
+        x, weapon:'bomb', ammo:3, speed:2.6, moveMax:800, hp:80
+      }));
+    }
+  }
+  if(level.id === 'quel' || level.id === 'aram'){
+    const desiredX = WORLD_WIDTH*0.18;
+    const x = findFreeX(desiredX, placedAlly, +1);
+    placedAlly.push(x);
+    units.push(makeUnit({
+      team:'orc', race:'ogre', name:'Огр Грх',
+      x, weapon:'club', ammo:0, speed:1.6, moveMax:500, hp:160
+    }));
+  }
+
+  const side = level.enemies;
+  const enemyNames = {
+    humans: ['Рыцарь','Лучник','Паладин','Капитан'],
+    gnomes: ['Гном-подрывник','Дворф-епископ','Лепрекон','Гном-подрывник'],
+    merfolk:['Русалка','Нага','Русалка','Нага'],
+    elves:  ['Эльф-лучник','Эльф-жрец','Эльф-друид','Эльф-лучник'],
+    ogres:  ['Огр','Огр','Огр','Огр']
+  }[side] || ['Враг','Враг','Враг','Враг'];
+
+  const placedEnemy = [];
+  for(let i=0;i<4;i++){
+    const desiredX = WORLD_WIDTH*0.90 - i*WORLD_WIDTH*0.05;
+    const x = findFreeX(desiredX, placedEnemy, -1);
+    placedEnemy.push(x);
+    units.push(makeEnemy(side, i, x, enemyNames[i]));
+  }
+
+  for(const u of units){
+    u.anim = {
+      blinkTimer: rand(60, 220), blink: 0, hitFlash: 0, recoil: 0,
+      walkCycle: Math.random()*Math.PI*2, breathPhase: Math.random()*Math.PI*2,
+      deathTimer: 0, deathRot: 0, deathVy: 0, deathVx: 0, targetAim: u.aimAngle
+    };
+  }
+}
+
+function makeUnit(opts){
+  return {
+    id: nextUnitId(),
+    team: opts.team, race: opts.race, name: opts.name,
+    x: opts.x, y: getGroundY(opts.x) - UNIT_RADIUS,
+    vx:0, vy:0,
+    health: opts.hp || MAX_HEALTH, maxHealth: opts.hp || MAX_HEALTH,
+    weapon: opts.weapon, hasShield:false, ammo: opts.ammo||0,
+    alive:true, aimAngle:-Math.PI/4, power: 50,
+    onGround:true, invisible:false,
+    moveSpeed: opts.speed, moveRangeUsed: 0, moveRangeMax: opts.moveMax,
+    facing: 1, hasActed: false, sleepTimer: 0,
+    abilities: opts.abilities || [],
+    abilityCooldowns: {},
+    rageTimer: 0, burrowedTimer: 0, invulnTimer: 0, invisibleTimer: 0,
+    usedAbilityThisTurn: false,
+    level: 1, xp: 0,
+    orcClass: opts.orcClass || null,
+    dmgMul: opts.dmgMul || 1
+  };
+}
+
+function makeEnemy(side, i, x, name){
+  let weapon='sword', ammo=0, hp=MAX_HEALTH, speed=1.8, moveMax=1200;
+  let race = side;
+  if(side === 'humans'){
+    const r = Math.random();
+    if(r<0.35) weapon='bow'; else if(r<0.65) weapon='gun';
+    else if(r<0.85) weapon='sword'; else weapon='shield';
+    if(weapon==='bow') ammo=6;
+    if(weapon==='gun') ammo=4;
+  } else if(side === 'gnomes'){
+    const r = Math.random();
+    if(r<0.4){ weapon='bomb'; ammo=4; }
+    else if(r<0.7){ weapon='gun'; ammo=4; }
+    else if(r<0.85){ weapon='bow'; ammo=5; }
+    else { weapon='sword'; ammo=0; }
+    speed = 1.9;
+    // часть — дворфы
+    if(i === 0 || i === 3) race = 'dwarves';
+    else race = 'gnomes';
+  } else if(side === 'merfolk'){
+    const r = Math.random();
+    if(r<0.5){ weapon='sleep'; ammo=5; } else { weapon='trident'; ammo=0; }
+    speed = 2.2;
+  } else if(side === 'elves'){
+    const r = Math.random();
+    if(r<0.5){ weapon='bow'; ammo=8; }
+    else if(r<0.8){ weapon='gun'; ammo=5; }
+    else { weapon='staff'; ammo=6; }
+    speed = 2.4; moveMax = 1400;
+  } else if(side === 'ogres'){
+    weapon='club'; hp=160; speed=1.5; moveMax=600;
+    race = 'ogres';
+  }
+  const u = makeUnit({ team:'enemy', race: race, name, x, weapon, ammo, speed, moveMax, hp });
+  u.abilities = (RACE_ABILITIES[race] || []).slice();
+  return u;
+}
+
+function getCurrentUnit(){
+  if(currentUnitId === null) return null;
+  return units.find(u => u.id === currentUnitId) || null;
+}
+function getTeamUnits(team){ return units.filter(u => u.team === team && u.alive); }
+function getTeamUnitsNotActed(team){ return units.filter(u => u.team === team && u.alive && !u.hasActed); }
+function hasAbility(u, key){ return u.abilities && u.abilities.indexOf(key) >= 0; }
+
+function gainXP(unit, amount){
+  if(!unit || !unit.alive) return;
+  unit.xp += amount;
+  const need = unit.level * 100;
+  if(unit.xp >= need){
+    unit.xp -= need;
+    unit.level++;
+    unit.maxHealth += 10;
+    unit.health += 10;
+    addJournal(unit.name + ' достиг уровня ' + unit.level + '!', '#ffd070');
+    SFX.ability();
+  }
+}
+
+// ============================================================
+//  СПОСОБНОСТИ — ЛОГИКА
+// ============================================================
+function tryUseAbility(unit, key){
+  if(!unit || !unit.alive) return false;
+  if(turnState !== 'aiming') return false;
+  if(unit.usedAbilityThisTurn) return false;
+  if(!hasAbility(unit, key)) return false;
+  if((unit.abilityCooldowns[key] || 0) > 0) return false;
+  const ab = ABILITIES[key];
+  if(!ab) return false;
+
+  if(ab.target === 'point' && key === 'teleport'){
+    teleportMode = true; teleportUnitId = unit.id;
+    gameMessage = 'Выберите точку телепортации'; messageTimer = 120;
+    return true;
+  }
+  if(ab.target === 'ally' && key === 'heal'){
+    healMode = true; healUnitId = unit.id;
+    gameMessage = 'Выберите союзника для исцеления'; messageTimer = 120;
+    return true;
+  }
+
+  switch(key){
+    case 'bloodlust':
+      unit.rageTimer = 2;
+      addJournal(unit.name + ' впадает в ярость!', '#ff6060');
+      break;
+    case 'warcry':
+      getTeamUnits(unit.team).forEach(u => { u.rageTimer = Math.max(u.rageTimer, 2); u.sleepTimer = 0; });
+      healEffect = { x: unit.x, y: unit.y-20, radius:0, maxRadius:180, alpha:1, color:'#ff8040' };
+      addJournal(unit.name + ': Боевой клич!', '#ff8040');
+      break;
+    case 'heal':
+      unit.health = Math.min(unit.maxHealth, unit.health + 40);
+      healEffect = { x:unit.x, y:unit.y-20, radius:0, maxRadius:60, alpha:1, color:'#80ff80' };
+      addJournal(unit.name + ' исцеляется на 40 HP', '#80ff80');
+      break;
+    case 'burrow':
+      unit.burrowedTimer = 2; unit.invisible = true;
+      addJournal(unit.name + ' зарывается под землю', '#a07a3a');
+      break;
+    case 'invisibility':
+      unit.invisible = true; unit.invisibleTimer = 2;
+      addJournal(unit.name + ' становится невидимым', '#88aaff');
+      break;
+    case 'ogreSmash': {
+      const R = 120; let hits = 0;
+      for(const u of units){
+        if(!u.alive || u === unit) continue;
+        if(Math.hypot(u.x-unit.x, u.y-unit.y) < R){ applyDamage(u, 30, unit); hits++; }
+      }
+      applyDamage(unit, 20, null);
+      explosion = { x:unit.x, y:unit.y, radius:0, maxRadius:140, alpha:1, timer:25, ring:0 };
+      camShake = 12;
+      addJournal(unit.name + ' бьёт по площади! (' + hits + ')', '#ffaa44');
+      break;
+    }
+    case 'prayer':
+      getTeamUnits(unit.team).forEach(u => { u.health = Math.min(u.maxHealth, u.health + 30); });
+      healEffect = { x:unit.x, y:unit.y-20, radius:0, maxRadius:200, alpha:1, color:'#fff0a0' };
+      addJournal(unit.name + ' молится Свету! +30 HP', '#fff0a0');
+      break;
+    case 'rejuvenation':
+      getTeamUnits(unit.team).forEach(u => {
+        u.health = Math.min(u.maxHealth, u.health + 35);
+        u.sleepTimer = 0;
+      });
+      healEffect = { x:unit.x, y:unit.y-20, radius:0, maxRadius:200, alpha:1, color:'#a0ffa0' };
+      addJournal(unit.name + ' омолаживает союзников!', '#a0ffa0');
+      break;
+    case 'stoneskin':
+      unit.invulnTimer = 3;
+      addJournal(unit.name + ' покрывается каменной кожей!', '#c8c8c8');
+      break;
+    default: return false;
+  }
+
+  unit.usedAbilityThisTurn = true;
+  unit.abilityCooldowns[key] = ab.cooldown;
+  unit.hasActed = true;
+  SFX.ability();
+  setTimeout(() => { if(!winner && turnState === 'aiming') endTurn(); }, 350);
+  return true;
+}
+
+function tryTeleportTo(unit, wx, wy){
+  if(wx < 30 || wx > WORLD_WIDTH - 30) return false;
+  const gy = getGroundY(wx);
+  if(Math.abs(gy - wy) > 220) return false;
+  if(isInsideHole(wx, gy - UNIT_RADIUS)) return false;
+  for(const u of units){
+    if(!u.alive || u === unit) continue;
+    if(Math.hypot(u.x - wx, u.y - (gy - UNIT_RADIUS)) < UNIT_RADIUS*2.2) return false;
+  }
+  for(let i=0;i<20;i++){
+    particles.push({ x:unit.x, y:unit.y, vx:rand(-4,4), vy:rand(-5,2),
+      gravity:0.2, life:rand(15,30), maxLife:30, type:'spark', color:'#c080ff', r:rand(1.5,3) });
+  }
+  unit.x = wx; unit.y = gy - UNIT_RADIUS;
+  for(let i=0;i<20;i++){
+    particles.push({ x:unit.x, y:unit.y, vx:rand(-4,4), vy:rand(-5,2),
+      gravity:0.2, life:rand(15,30), maxLife:30, type:'spark', color:'#e0b0ff', r:rand(1.5,3) });
+  }
+  return true;
+}
+
+function tryHealAlly(healer, target){
+  if(!target || !target.alive || target.team !== healer.team) return false;
+  target.health = Math.min(target.maxHealth, target.health + 40);
+  healEffect = { x:target.x, y:target.y-20, radius:0, maxRadius:60, alpha:1, color:'#80ff80' };
+  addJournal(healer.name + ' лечит ' + target.name + ' на 40 HP', '#80ff80');
+  healer.abilityCooldowns['heal'] = ABILITIES.heal.cooldown;
+  healer.usedAbilityThisTurn = true;
+  healer.hasActed = true;
+  SFX.heal();
+  setTimeout(() => { if(!winner && turnState === 'aiming') endTurn(); }, 350);
+  return true;
+}
+
+// ============================================================
+//  ФИЗИКА / УРОН
+// ============================================================
+function updateProjectiles(dt){
+  if(projectile){
+    projectile.vy += GRAVITY;
+    projectile.x += projectile.vx * dt;
+    projectile.y += projectile.vy * dt;
+    projectile.life--;
+    projectile.rot = (projectile.rot || 0) + 0.3;
+    if(projectile.trail){
+      projectile.trail.push({x:projectile.x, y:projectile.y, life:18});
+      if(projectile.trail.length > 30) projectile.trail.shift();
+    }
+    if(projectile.x < -100 || projectile.x > WORLD_WIDTH+100 || projectile.y > WORLD_HEIGHT+200 || projectile.life <= 0){
+      createExplosion(projectile.x, Math.min(projectile.y, WORLD_HEIGHT), projectile.damage, projectile.radius*2.5, projectile.owner);
+      projectile = null; return;
+    }
+    const gy = getGroundY(projectile.x);
+    if(projectile.y + projectile.radius >= gy){
+      createExplosion(projectile.x, gy, projectile.damage, projectile.radius*2.5, projectile.owner);
+      projectile = null; return;
+    }
+    for(const o of objects){
+      if(o.hp <= 0) continue;
+      if(projectile.x > o.x-o.w/2 && projectile.x < o.x+o.w/2 && projectile.y > o.y && projectile.y < o.y+o.h){
+        createExplosion(projectile.x, projectile.y, projectile.damage, projectile.radius*2.5, projectile.owner);
+        projectile = null; return;
+      }
+    }
+    for(const u of units){
+      if(!u.alive || u === projectile.owner || u.team === projectile.owner.team) continue;
+      const d = Math.hypot(u.x-projectile.x, u.y-projectile.y);
+      if(d < UNIT_RADIUS + projectile.radius + 2){
+        if(projectile.type === 'sleep'){
+          u.sleepTimer = 180;
+          addJournal(u.name + ' уснул!', '#a0c0ff');
+        } else {
+          let dmg = projectile.damage;
+          applyDamage(u, dmg, projectile.owner);
+        }
+        createExplosion(projectile.x, projectile.y, 0, 25, projectile.owner);
+        projectile = null; return;
+      }
+    }
+  }
+
+  for(let i=particles.length-1;i>=0;i--){
+    const p = particles[i];
+    p.vy += (p.gravity||0);
+    p.x += p.vx * dt; p.y += p.vy * dt; p.life--;
+    if(p.rot !== undefined) p.rot += (p.rotSpeed || 0.2);
+    if(p.life <= 0){ particles.splice(i,1); continue; }
+    if(p.type === 'spark' || p.type === 'dust' || p.type === 'blood') continue;
+    const gy = getGroundY(p.x);
+    if(p.y >= gy){
+      if(p.explodeOnGround) createExplosion(p.x, gy, p.damage, 55, p.owner);
+      p.life = 0; continue;
+    }
+    for(const u of units){
+      if(!u.alive || u === p.owner || u.team === p.owner.team) continue;
+      if(Math.hypot(u.x-p.x, u.y-p.y) < UNIT_RADIUS+4){
+        if(p.explodeOnGround) createExplosion(p.x, p.y, p.damage, 55, p.owner);
+        else applyDamage(u, p.damage, p.owner);
+        p.life = 0; break;
+      }
+    }
+  }
+}
+
+function applyDamage(u, dmg, attacker){
+  if(!u || !u.alive) return;
+  if(u.invulnTimer > 0){
+    addJournal(u.name + ' неуязвим!', '#c8c8c8');
+    return;
+  }
+  if(u.hasShield){ dmg *= 0.3; u.hasShield = false; }
+  if(attacker && attacker.rageTimer > 0) dmg *= 1.5;
+  if(attacker && attacker.invisible) dmg *= 1.5;
+  u.health -= dmg;
+  if(u.anim && dmg > 0) u.anim.hitFlash = 12;
+  if(dmg > 0){
+    spawnBlood(u.x, u.y - 10, Math.min(20, 4 + dmg/2));
+    if(dmg > 40){ camShake = Math.max(camShake, 6); slowmoTimer = 6; }
+  }
+  SFX.hit();
+  if(attacker) gainXP(attacker, Math.floor(dmg/2));
+  if(u.health <= 0){
+    u.health = 0; u.alive = false;
+    SFX.death();
+    if(u.anim){
+      u.anim.deathTimer = 60; u.anim.deathRot = 0;
+      u.anim.deathVy = -3 - Math.random()*2;
+      u.anim.deathVx = (Math.random()-0.5)*3;
+    }
+    addJournal(u.name + ' погибает!', '#ff8080');
+    if(u.team === 'enemy'){
+      const goldGain = Math.round(15 * (1 + (progress.upgrades.gold||0)*0.2));
+      progress.gold += goldGain;
+      saveProgress();
+    }
+    if(attacker && attacker.team === 'orc') gainXP(attacker, 40);
+  }
+}
+
+function spawnBlood(x, y, count){
+  count = count || 8;
+  for(let i=0;i<count;i++){
+    particles.push({
+      x, y, vx: rand(-3,3), vy: rand(-4,1),
+      gravity: 0.25, life: rand(15, 30), maxLife: 30,
+      type:'blood', color: Math.random()<0.5 ? '#c02020' : '#8a0000', r: rand(1.5, 3)
+    });
+  }
+  decals.push({ type:'blood', x, y, r: rand(6, 14), alpha: 0.7 });
+  if(decals.length > 200) decals.shift();
+}
+
+function spawnHitSparks(x, y, count){
+  count = count || 8;
+  for(let i=0;i<count;i++){
+    particles.push({
+      x, y, vx: rand(-3,3), vy: rand(-4,1),
+      gravity: 0.25, life: rand(15, 30), maxLife: 30,
+      type:'spark', color: Math.random()<0.5 ? '#ffcc44' : '#ff6622', r: rand(1.2, 2.6)
+    });
+  }
+}
+
+function spawnDust(x, y, dir){
+  for(let i=0;i<2;i++){
+    particles.push({
+      x: x + rand(-4,4), y: y + rand(-2,2),
+      vx: -dir * rand(0.3, 1.2) + rand(-0.4,0.4),
+      vy: rand(-0.8, -0.2), gravity: 0.04,
+      life: rand(14, 26), maxLife: 26, type:'dust',
+      color: level.id === 'aram' ? 'rgba(220,200,150,0.7)' : 'rgba(180,170,150,0.6)',
+      r: rand(1.5, 3)
+    });
+  }
+}
+
+function createExplosion(x, y, damage, radius, owner){
+  explosion = { x, y, radius:0, maxRadius: radius || 40, alpha:1, timer:25, ring:0 };
+  if(damage > 0 || radius > 0) destroyTerrain(x, y, (radius||20) * 0.7);
+  for(let i=0;i<12;i++){
+    particles.push({
+      x, y, vx: rand(-5,5), vy: rand(-6,2), gravity: 0.3,
+      life: rand(15, 35), maxLife: 35, type:'spark',
+      color: Math.random()<0.5 ? '#ffdd66' : '#ff5522', r: rand(1.5, 3.2)
+    });
+  }
+  camShake = Math.max(camShake, 10);
+  SFX.explode();
+  if(damage > 0){
+    for(const u of units){
+      if(!u.alive || u === owner) continue;
+      const d = Math.hypot(u.x-x, u.y-y);
+      if(d < (radius||40)*1.6) applyDamage(u, damage * (1 - d/((radius||40)*1.6)), owner);
+    }
+  }
+}
+
+// ============================================================
+//  ОРУЖИЕ
+// ============================================================
+function weaponName(w){
+  return ({ axe:'Топор', spear:'Копьё', sling:'Праща', gun:'Ружьё',
+    sword:'Меч', shield:'Щит', bow:'Лук', bomb:'Бомба',
+    sleep:'Чары сна', trident:'Трезубец', staff:'Посох',
+    club:'Дубина', claw:'Когти' })[w] || w;
+}
+
+function fireWeapon(unit){
+  if(!unit || !unit.alive) return;
+  const angle = unit.aimAngle;
+  const power = unit.power;
+  const rageMul = unit.rageTimer > 0 ? 1.5 : 1;
+  const invisMul = unit.invisible ? 1.5 : 1;
+  const classMul = unit.dmgMul || 1;
+  if(unit.anim) unit.anim.recoil = 14;
+
+  if(['sword','claw','club'].includes(unit.weapon)){
+    const hitR = unit.weapon === 'club' ? 90 : 70;
+    const baseDmg = unit.weapon === 'club' ? 60 : (unit.weapon === 'claw' ? 25 : 30);
+    let hits = 0;
+    for(const u of units){
+      if(!u.alive || u.team === unit.team) continue;
+      const d = Math.hypot(u.x-unit.x, u.y-unit.y);
+      if(d < hitR){
+        const dmg = baseDmg * rageMul * invisMul * classMul * (1 - d/hitR*0.5);
+        applyDamage(u, dmg, unit); hits++;
+      }
+    }
+    if(hits > 0){
+      addJournal(unit.name + ' бьёт! (' + hits + ')', '#ff8040');
+      explosion = { x: unit.x + Math.cos(angle)*35, y: unit.y + Math.sin(angle)*35,
+        radius:0, maxRadius: 55, alpha:1, timer:18, ring: 0 };
+      camShake = 5;
+    } else addJournal(unit.name + ' — промах.', '#888');
+    messageTimer = 70;
+    endTurn(); return;
+  }
+
+  if(unit.weapon === 'shield'){
+    unit.hasShield = true;
+    addJournal(unit.name + ' поднимает щит', '#d4af37');
+    messageTimer = 70; endTurn(); return;
+  }
+
+  if(unit.weapon === 'bomb'){
+    if(unit.ammo <= 0){ addJournal('Нет бомб!', '#888'); endTurn(); return; }
+    unit.ammo--;
+    const speed = 9 + power*0.12;
+    particles.push({ x: unit.x + Math.cos(angle)*22, y: unit.y + Math.sin(angle)*22,
+      vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed,
+      gravity: 0.35, life: 200, type:'bomb', damage: 45*rageMul*classMul,
+      explodeOnGround:true, owner: unit, rot: 0, rotSpeed: 0.3 });
+    SFX.shoot();
+    addJournal(unit.name + ' бросает бомбу', '#ffaa44');
+    turnState = 'projectile'; pendingEnd = true; endTimer = 0; return;
+  }
+
+  if(unit.weapon === 'sleep'){
+    if(unit.ammo <= 0){ addJournal('Нет чар!', '#888'); endTurn(); return; }
+    unit.ammo--;
+    const speed = 7 + power*0.1;
+    projectile = { x: unit.x + Math.cos(angle)*22, y: unit.y + Math.sin(angle)*22,
+      vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed,
+      damage: 0, radius: 8, owner: unit, life: 200, type:'sleep', trail: [], rot: 0 };
+    SFX.shoot();
+    addJournal(unit.name + ' насылает сон', '#a0c0ff');
+    turnState = 'projectile'; pendingEnd = true; endTimer = 0; return;
+  }
+
+  let speed = 8 + power*0.14;
+  let damage = 20, radius = 6;
+  if(unit.weapon === 'axe'){ speed = 9 + power*0.12; damage = 22; radius = 8; }
+  else if(unit.weapon === 'spear'){
+    if(unit.ammo<=0){ addJournal('Нет копий!', '#888'); endTurn(); return; }
+    unit.ammo--; speed = 11 + power*0.16; damage = 28; radius = 6;
+  }
+  else if(unit.weapon === 'sling'){
+    if(unit.ammo<=0){ addJournal('Нет камней!', '#888'); endTurn(); return; }
+    unit.ammo--; speed = 8 + power*0.18; damage = 15; radius = 10;
+  }
+  else if(unit.weapon === 'gun'){
+    if(unit.ammo<=0){ addJournal('Нет патронов!', '#888'); endTurn(); return; }
+    unit.ammo--; speed = 15 + power*0.22; damage = 32; radius = 5;
+  }
+  else if(unit.weapon === 'bow'){
+    if(unit.ammo<=0){ addJournal('Нет стрел!', '#888'); endTurn(); return; }
+    unit.ammo--; speed = 13 + power*0.2; damage = 24; radius = 4;
+  }
+  else if(unit.weapon === 'staff'){
+    if(unit.ammo<=0){ addJournal('Нет заряда!', '#888'); endTurn(); return; }
+    unit.ammo--; speed = 10 + power*0.15; damage = 22; radius = 7;
+  }
+
+  projectile = {
+    x: unit.x + Math.cos(angle)*22, y: unit.y + Math.sin(angle)*22,
+    vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed,
+    damage: damage * rageMul * invisMul * classMul,
+    radius, owner: unit, life: 400, trail: [], rot: 0
+  };
+  SFX.shoot();
+  turnState = 'projectile'; pendingEnd = true; endTimer = 0;
+  addJournal(unit.name + ' атакует', '#ffb347');
+  messageTimer = 60;
+}
+
+// ============================================================
+//  ХОД
+// ============================================================
+function endTurn(){
+  if(winner) return;
+  if(turnState === 'ending') return;
+  turnState = 'ending';
+  projectile = null; explosion = null; charging = false; mouse.down = false;
+  pendingEnd = false; endTimer = 0; aiThinking = false;
+  teleportMode = false; teleportUnitId = null;
+  healMode = false; healUnitId = null;
+  keys = {};
+
+  const cur = getCurrentUnit();
+  if(cur && cur.alive){
+    cur.hasActed = true;
+    if(cur.invisible) cur.invisible = false;
+    if(cur.rageTimer > 0) cur.rageTimer--;
+    if(cur.burrowedTimer > 0) cur.burrowedTimer--;
+    if(cur.invulnTimer > 0) cur.invulnTimer--;
+    if(cur.invisibleTimer > 0){
+      cur.invisibleTimer--;
+      if(cur.invisibleTimer <= 0) cur.invisible = false;
+    }
+  }
+
+  setTimeout(() => {
+    if(winner) return;
+    checkWinCondition();
+    if(winner) return;
+
+    let nextUnit = getTeamUnitsNotActed(currentTeam)[0];
+    if(!nextUnit){
+      const otherTeam = currentTeam === 'orc' ? 'enemy' : 'orc';
+      units.filter(u => u.team === otherTeam && u.alive).forEach(u => { u.hasActed = false; });
+      units.filter(u => u.team === currentTeam && u.alive).forEach(u => { u.hasActed = false; });
+      let nextTeam = otherTeam;
+      let nextTeamUnits = getTeamUnits(nextTeam);
+      if(nextTeamUnits.length === 0){
+        nextTeamUnits = getTeamUnits(currentTeam);
+        if(nextTeamUnits.length === 0) return;
+        nextTeam = currentTeam;
+      }
+      currentTeam = nextTeam;
+      units.filter(u => u.team === 'orc').forEach(u => { if(u.burrowedTimer <= 0) u.invisible = false; });
+      nextUnit = getTeamUnits(currentTeam)[0];
+      if(!nextUnit) return;
+      currentUnitId = nextUnit.id;
+      nextUnit.moveRangeUsed = 0;
+      units.filter(u => u.team === currentTeam && u.alive).forEach(u => { u.hasActed = false; });
+    } else {
+      currentUnitId = nextUnit.id;
+      nextUnit.moveRangeUsed = 0;
+    }
+
+    const unit = getCurrentUnit();
+    if(!unit) return;
+    unit.aimAngle = unit.team === 'orc' ? -Math.PI/4 : -Math.PI + Math.PI/4;
+    if(unit.anim) unit.anim.targetAim = unit.aimAngle;
+    unit.power = 50;
+    turnState = 'aiming';
+    inputLockUntil = performance.now() + 200;
+    unit.usedAbilityThisTurn = false;
+    for(const k in unit.abilityCooldowns) if(unit.abilityCooldowns[k] > 0) unit.abilityCooldowns[k]--;
+
+    addJournal('Ход: ' + unit.name, unit.team==='orc'?'#ffb347':'#88ccff');
+    messageTimer = 80;
+
+    if(currentTeam === 'enemy') setTimeout(startAI, 400);
+  }, 400);
+}
+
+function checkWinCondition(){
+  const orcs = units.filter(u => u.team === 'orc' && u.alive).length;
+  const enemies = units.filter(u => u.team === 'enemy' && u.alive).length;
+  if(orcs === 0 && enemies === 0){ winner = 'draw'; showDefeat(); }
+  else if(orcs === 0){ winner = 'enemy'; showDefeat(); }
+  else if(enemies === 0){
+    winner = 'orc';
+    progress.gold += (level.reward || 100);
+    if(progress.completed.indexOf(currentLevelIndex) < 0) progress.completed.push(currentLevelIndex);
+    saveProgress();
+    SFX.win();
+    showLevelComplete();
+  }
+}
+
+// ============================================================
+//  ИИ
+// ============================================================
+function startAI(){
+  if(currentTeam !== 'enemy') return;
+  aiThinking = true; aiTimer = 0; aiPhase = 'think';
+}
+
+function updateAI(){
+  if(!aiThinking) return;
+  if(currentTeam !== 'enemy'){ aiThinking = false; return; }
+  const unit = getCurrentUnit();
+  if(!unit || !unit.alive){ aiThinking = false; return; }
+  if(turnState !== 'aiming') return;
+  aiTimer++;
+
+  if(aiPhase === 'think'){
+    if(aiTimer < 20) return;
+    const enemies = units.filter(u => u.team === 'orc' && u.alive);
+    if(enemies.length === 0){ aiThinking = false; return; }
+    const target = enemies.reduce((best, e) => {
+      const score = (1 - e.health/e.maxHealth)*100 + (300 - Math.abs(e.x-unit.x))*0.15;
+      return score > best.score ? {e, score} : best;
+    }, {e: enemies[0], score: -Infinity}).e;
+
+    if(unit.abilities && unit.abilities.length > 0 && !unit.usedAbilityThisTurn && Math.random() < 0.35){
+      if(hasAbility(unit,'prayer') && getTeamUnits('enemy').some(u => u.health < u.maxHealth*0.7)){
+        tryUseAbility(unit,'prayer'); aiThinking = false; return;
+      }
+      if(hasAbility(unit,'rejuvenation') && getTeamUnits('enemy').some(u => u.health < u.maxHealth*0.7)){
+        tryUseAbility(unit,'rejuvenation'); aiThinking = false; return;
+      }
+      if(hasAbility(unit,'stoneskin') && unit.health < unit.maxHealth*0.5){
+        tryUseAbility(unit,'stoneskin'); aiThinking = false; return;
+      }
+      if(hasAbility(unit,'invisibility') && Math.random()<0.5){
+        tryUseAbility(unit,'invisibility'); aiThinking = false; return;
+      }
+      if(hasAbility(unit,'bloodlust') && Math.random()<0.5){
+        tryUseAbility(unit,'bloodlust'); aiThinking = false; return;
+      }
+    }
+
+    if(['sword','claw','club'].includes(unit.weapon)){
+      const near = enemies.find(e => Math.hypot(e.x-unit.x, e.y-unit.y) < (unit.weapon==='club'?100:75));
+      if(near){
+        unit.aimAngle = Math.atan2(near.y - unit.y, near.x - unit.x);
+        if(unit.anim) unit.anim.targetAim = unit.aimAngle;
+        aiPhase = 'attack'; aiTimer = 0; return;
+      } else {
+        aiPhase = 'move'; aiTimer = 0;
+        unit.moveTargetX = enemies.reduce((best, e) => {
+          const d = Math.abs(e.x - unit.x);
+          return d < best.d ? {e,d} : best;
+        }, {e: enemies[0], d: Infinity}).e.x;
+        return;
+      }
+    }
+
+    const dx = target.x - unit.x, dy = target.y - unit.y;
+    let best = null;
+    const speeds = [8,10,12,14,16,18,20,22];
+    for(let angleDeg = -175; angleDeg <= -5; angleDeg += 6){
+      for(const speed of speeds){
+        const angle = angleDeg * Math.PI / 180;
+        let px = unit.x + Math.cos(angle)*22;
+        let py = unit.y + Math.sin(angle)*22;
+        let vx = Math.cos(angle)*speed, vy = Math.sin(angle)*speed;
+        let steps = 0;
+        while(steps < 300){
+          vy += GRAVITY; px += vx; py += vy; steps++;
+          if(py > WORLD_HEIGHT+50 || px < -50 || px > WORLD_WIDTH+50) break;
+          if(px >= target.x-45 && px <= target.x+45 && py >= target.y-45 && py <= target.y-5){
+            const err = Math.abs(px - target.x) + Math.abs(py - target.y);
+            if(!best || err < best.err) best = {angle, speed, err};
+            break;
+          }
+          if(py >= getGroundY(px)) break;
+        }
+      }
+    }
+    let angle = best ? best.angle : (Math.PI + Math.atan2(dy, dx));
+    let speed = best ? best.speed : 12;
+    let power = clamp((speed-8)/0.14, 20, 100);
+    angle += (Math.random()-0.5)*0.1;
+    power = clamp(power + (Math.random()-0.5)*8, 20, 100);
+    unit.aimAngle = angle;
+    if(unit.anim) unit.anim.targetAim = angle;
+    unit.power = power;
+    aiPhase = 'attack'; aiTimer = 0;
+  }
+  else if(aiPhase === 'attack'){
+    if(aiTimer > 20){ fireWeapon(unit); aiThinking = false; aiPhase = ''; }
+  }
+  else if(aiPhase === 'move'){
+    const u = getCurrentUnit();
+    if(!u){ aiThinking = false; return; }
+    const targetX = u.moveTargetX || u.x;
+    const dx = targetX - u.x;
+    if(Math.abs(dx) < 15 || u.moveRangeUsed >= u.moveRangeMax || aiTimer > 120){
+      aiPhase = 'think'; aiTimer = 0; return;
+    }
+    const move = Math.sign(dx);
+    const nextX = u.x + move * u.moveSpeed;
+    const curY = getGroundY(u.x), nextY = getGroundY(nextX);
+    if(Math.abs(nextY - curY) < 20 && nextX > 15 && nextX < WORLD_WIDTH-15){
+      u.x = nextX; u.y = getGroundY(u.x) - UNIT_RADIUS;
+      u.moveRangeUsed += u.moveSpeed; u.facing = move;
+      if(u.anim){ u.anim.walkCycle += 0.28; if(Math.random()<0.2) spawnDust(u.x, u.y + UNIT_RADIUS, move); }
+    } else { aiPhase = 'think'; aiTimer = 0; }
+  }
+}
+
+// ============================================================
+//  ДВИЖЕНИЕ / ПРИЦЕЛ
+// ============================================================
+function updateMovement(){
+  const unit = getCurrentUnit();
+  if(!unit || !unit.alive) return;
+  if(turnState !== 'aiming') return;
+  if(performance.now() < inputLockUntil) return;
+  if(unit.team !== 'orc') return;
+  if(unit.sleepTimer > 0) return;
+  if(teleportMode || healMode) return;
+
+  let move = 0;
+  if(keys['a'] || keys['A'] || keys['ArrowLeft']) move -= 1;
+  if(keys['d'] || keys['D'] || keys['ArrowRight']) move += 1;
+  const moveMax = unit.moveRangeMax + (unit.rageTimer > 0 ? 300 : 0);
+  if(move !== 0 && unit.moveRangeUsed < moveMax){
+    const nextX = unit.x + move * unit.moveSpeed;
+    const curY = getGroundY(unit.x), nextY = getGroundY(nextX);
+    if(Math.abs(nextY - curY) < 22 && nextX > 15 && nextX < WORLD_WIDTH-15){
+      unit.x = nextX;
+      unit.y = getGroundY(unit.x) - UNIT_RADIUS;
+      unit.moveRangeUsed += Math.abs(move * unit.moveSpeed);
+      unit.facing = move;
+      if(unit.anim){
+        unit.anim.walkCycle += 0.28;
+        if(Math.random()<0.25){ spawnDust(unit.x, unit.y + UNIT_RADIUS, move); if(Math.random()<0.3) SFX.step(); }
+      }
+    }
+  }
+  if((keys['w'] || keys['W']) && unit.onGround){ unit.vy = -9; unit.onGround = false; }
+}
+
+function updateAim(dt){
+  if(turnState !== 'aiming') return;
+  if(teleportMode || healMode) return;
+  const unit = getCurrentUnit();
+  if(!unit || unit.team !== 'orc' || !unit.alive) return;
+  if(unit.sleepTimer > 0) return;
+  const dx = mouse.worldX - unit.x, dy = mouse.worldY - unit.y;
+  unit.aimAngle = Math.atan2(dy, dx);
+  if(unit.anim) unit.anim.targetAim = unit.aimAngle;
+  const dist = Math.hypot(dx, dy);
+  mouse.distFromUnit = dist;
+  const t = clamp((dist - AIM_DIST_MIN) / (AIM_DIST_MAX - AIM_DIST_MIN), 0, 1);
+  let power = AIM_POWER_MIN + t * (AIM_POWER_MAX - AIM_POWER_MIN);
+  if(keys['ArrowUp'] || keys['+']) power += 0.8;
+  if(keys['ArrowDown'] || keys['-']) power -= 0.8;
+  unit.power = clamp(power, AIM_POWER_MIN, AIM_POWER_MAX);
+}
+
+// ============================================================
+//  ОБНОВЛЕНИЕ
+// ============================================================
+let lastTime = performance.now();
+function update(){
+  const now = performance.now();
+  let dt = (now - lastTime) / 16.666;
+  lastTime = now;
+  if(dt > 3) dt = 3;
+  if(slowmoTimer > 0){ dt *= 0.4; slowmoTimer--; }
+  time += dt;
+
+  if(camShake > 0){
+    camShakeX = (Math.random()-0.5) * camShake;
+    camShakeY = (Math.random()-0.5) * camShake;
+    camShake *= 0.85;
+    if(camShake < 0.5) camShake = 0;
+  } else { camShakeX = 0; camShakeY = 0; }
+
+  updateMovement();
+  updateAim(dt);
+  updateAI();
+
+  for(const u of units){
+    if(!u.anim) continue;
+    u.anim.blinkTimer--;
+    if(u.anim.blinkTimer <= 0){ u.anim.blink = 6; u.anim.blinkTimer = rand(90, 260); }
+    if(u.anim.blink > 0) u.anim.blink--;
+    if(u.anim.hitFlash > 0) u.anim.hitFlash--;
+    if(u.anim.recoil > 0) u.anim.recoil *= 0.85;
+    if(u.anim.targetAim !== undefined && u.anim.targetAim !== null){
+      let diff = u.anim.targetAim - u.aimAngle;
+      while(diff > Math.PI) diff -= Math.PI*2;
+      while(diff < -Math.PI) diff += Math.PI*2;
+      u.aimAngle += diff * 0.15;
+    }
+    u.anim.breathPhase += 0.045 * dt;
+
+    if(!u.alive && u.anim.deathTimer > 0){
+      u.anim.deathTimer -= dt;
+      u.anim.deathVy += 0.35 * dt;
+      u.y += u.anim.deathVy * dt;
+      u.x += u.anim.deathVx * dt;
+      u.anim.deathRot += 0.08 * dt;
+      const gy = getGroundY(u.x);
+      if(u.y > gy - UNIT_RADIUS*0.5){ u.y = gy - UNIT_RADIUS*0.5; u.anim.deathVy *= -0.3; u.anim.deathVx *= 0.7; }
+      continue;
+    }
+    if(!u.alive) continue;
+    if(u.sleepTimer > 0){ u.sleepTimer--; continue; }
+    const gy = getGroundY(u.x);
+    if(u.y + UNIT_RADIUS < gy - 1){ u.vy += GRAVITY; u.y += u.vy; u.onGround = false; }
+    else {
+      if(!u.onGround) for(let i=0;i<4;i++) spawnDust(u.x, gy, 1);
+      u.y = gy - UNIT_RADIUS; u.vy = 0; u.onGround = true;
+    }
+  }
+
+  if(turnState === 'projectile') updateProjectiles(dt);
+
+  if(explosion){
+    explosion.timer--;
+    explosion.radius += (explosion.maxRadius - explosion.radius) * 0.25;
+    explosion.ring += 0.08;
+    explosion.alpha = Math.max(0, explosion.timer / 25);
+    if(explosion.timer <= 0) explosion = null;
+  }
+  if(healEffect){
+    healEffect.radius += (healEffect.maxRadius - healEffect.radius)*0.1;
+    healEffect.alpha -= 0.02;
+    if(healEffect.alpha <= 0) healEffect = null;
+  }
+  if(messageTimer > 0) messageTimer--;
+
+  for(const p of weatherParticles){
+    p.x += p.vx * dt; p.y += p.vy * dt; p.phase += 0.03 * dt;
+    if(p.x < -10) p.x = WORLD_WIDTH + 10;
+    if(p.x > WORLD_WIDTH + 10) p.x = -10;
+    if(p.y < -10) p.y = WORLD_HEIGHT + 10;
+    if(p.y > WORLD_HEIGHT + 10) p.y = -10;
+  }
+  for(const d of decals){ if(d.alpha !== undefined && d.alpha > 0.15) d.alpha -= 0.0005*dt; }
+
+  if(pendingEnd && turnState === 'projectile'){
+    const left = particles.filter(p => p.type==='pellet' || p.type==='bomb').length;
+    if(!projectile && left === 0 && !explosion){
+      endTimer++;
+      if(endTimer > 25){ endTimer = 0; endTurn(); }
+    } else endTimer = 0;
+  }
+
+  updateTooltip();
+}
+
+// ============================================================
+//  ТУЛТИП
+// ============================================================
+function updateTooltip(){
+  tooltip = null;
+  for(const r of abilityRects){
+    if(Math.hypot(mouse.worldX - r.cx, mouse.worldY - r.cy) <= r.r + 4){
+      const ab = ABILITIES[r.key];
+      if(!ab) continue;
+      const unit = getCurrentUnit();
+      const cd = unit ? (unit.abilityCooldowns[r.key] || 0) : 0;
+      tooltip = {
+        title: ab.name,
+        desc: ab.desc,
+        extra: cd > 0 ? ('Перезарядка: ' + cd) : 'Готово',
+        x: r.cx, y: r.cy - 20
+      };
+      return;
+    }
+  }
+  const hovering = units.find(u => u.alive && Math.hypot(mouse.worldX - u.x, mouse.worldY - u.y) < UNIT_RADIUS + 8);
+  if(hovering){
+    const cur = getCurrentUnit();
+    let extra = '';
+    if(cur && hovering.team !== cur.team && turnState === 'aiming'){
+      let dmg = 20;
+      switch(cur.weapon){
+        case 'axe': dmg = 22; break;
+        case 'spear': dmg = 28; break;
+        case 'sling': dmg = 15; break;
+        case 'gun': dmg = 32; break;
+        case 'bow': dmg = 24; break;
+        case 'staff': dmg = 22; break;
+        case 'club': dmg = 60; break;
+        case 'sword': dmg = 30; break;
+      }
+      dmg *= (cur.dmgMul||1);
+      if(cur.rageTimer > 0) dmg *= 1.5;
+      extra = '~ ' + Math.round(dmg) + ' урона';
+    }
+    tooltip = {
+      title: hovering.name + (hovering.level > 1 ? ' (ур. '+hovering.level+')' : ''),
+      desc: raceName(hovering.race) + ' | ' + weaponName(hovering.weapon),
+      extra: 'HP: ' + Math.round(hovering.health) + '/' + hovering.maxHealth + (extra ? ' | ' + extra : ''),
+      x: hovering.x, y: hovering.y - UNIT_RADIUS - 50
+    };
+    return;
+  }
+  for(const r of unitPanelRects){
+    if(mouse.worldX >= r.x && mouse.worldX <= r.x+r.w && mouse.worldY >= r.y && mouse.worldY <= r.y+r.h){
+      const u = units.find(x => x.id === r.id);
+      if(u){
+        tooltip = {
+          title: u.name + (u.level > 1 ? ' (ур. '+u.level+')' : ''),
+          desc: raceName(u.race) + ' | ' + weaponName(u.weapon),
+          extra: 'HP: ' + Math.round(u.health) + '/' + u.maxHealth,
+          x: r.x + r.w/2, y: r.y - 20
+        };
+      }
+      return;
+    }
+  }
+}
+
+function raceName(r){
+  return ({ orc:'Орк', troll:'Тролль', goblin:'Гоблин', ogre:'Огр',
+    humans:'Человек', gnomes:'Гном', dwarves:'Дворф',
+    merfolk:'Русалка', elves:'Эльф', ogres:'Огр' })[r] || r;
+}
+function className(k){
+  return ({ warlord:'Вождь', berserker:'Берсерк', shaman:'Шаман', hunter:'Охотник' })[k] || '';
+}
+
+// ============================================================
+//  ФОН
+// ============================================================
+function drawBackground(){
+  const g = ctx.createLinearGradient(0,0,0,canvas.height);
+  g.addColorStop(0, level.sky[0]); g.addColorStop(0.5, level.sky[1]); g.addColorStop(1, level.sky[2]);
+  ctx.fillStyle = g; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  if(level.stars){
+    for(let i=0;i<60;i++){
+      const sx = (i*137.5) % canvas.width;
+      const sy = ((i*73.3) % (canvas.height*0.5));
+      const tw = 0.5 + 0.5*Math.sin(time*0.03 + i);
+      ctx.fillStyle = `rgba(255,255,255,${0.2 + tw*0.5})`;
+      ctx.beginPath(); ctx.arc(sx, sy, 0.8 + tw*0.8, 0, Math.PI*2); ctx.fill();
+    }
+  }
+  const sunX = canvas.width*0.8, sunY = 90;
+  const sunGlow = ctx.createRadialGradient(sunX, sunY, 5, sunX, sunY, 120);
+  sunGlow.addColorStop(0, level.id === 'aram' ? 'rgba(255,220,120,0.9)' :
+    level.id === 'sea' ? 'rgba(200,240,255,0.7)' : 'rgba(255,255,220,0.8)');
+  sunGlow.addColorStop(0.25, 'rgba(255,240,180,0.18)');
+  sunGlow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = sunGlow; ctx.fillRect(sunX-130, sunY-130, 260, 260);
+
+  const cloudCount = level.clouds || 3;
+  for(let i=0;i<cloudCount;i++){
+    const cx = ((i*430 + time*0.15) % (canvas.width + 400)) - 200;
+    const cy = 60 + (i*57) % 120;
+    const s = 0.7 + (i%3)*0.35;
+    ctx.fillStyle = `rgba(255,255,255,${0.08 + 0.04*(i%2)})`;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, 90*s, 22*s, 0, 0, Math.PI*2);
+    ctx.ellipse(cx+50*s, cy+5, 60*s, 18*s, 0, 0, Math.PI*2);
+    ctx.ellipse(cx-45*s, cy+6, 55*s, 16*s, 0, 0, Math.PI*2);
+    ctx.fill();
+  }
+  drawParallaxLayer(0.25, 0.35, 160, level.id === 'byun' ? 1.6 : 1);
+  drawParallaxLayer(0.5, 0.5, 100, level.id === 'quel' ? 1.3 : 1);
+
+  for(const p of weatherParticles){
+    const tw = 0.5 + 0.5*Math.sin(time*0.05 + p.phase);
+    if(p.kind === 'star'){ ctx.fillStyle = `rgba(255,255,220,${p.a * tw})`; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); }
+    else if(p.kind === 'dust'){ ctx.fillStyle = `rgba(230,200,140,${p.a * tw * 0.8})`; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); }
+    else if(p.kind === 'bubble'){ ctx.strokeStyle = `rgba(180,240,255,${p.a * tw})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(p.x, p.y, p.r*1.6, 0, Math.PI*2); ctx.stroke(); }
+  }
+  if(level.fog){
+    const fg = ctx.createLinearGradient(0, canvas.height*0.4, 0, canvas.height);
+    fg.addColorStop(0, 'rgba(0,0,0,0)');
+    fg.addColorStop(1, level.fog);
+    ctx.fillStyle = fg; ctx.fillRect(0, canvas.height*0.4, canvas.width, canvas.height*0.6);
+  }
+}
+
+function drawParallaxLayer(depth, alpha, height, scale){
+  scale = scale || 1;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = '#000';
+  const offset = -time * 0.05 * depth, step = 220;
+  ctx.beginPath(); ctx.moveTo(0, canvas.height);
+  for(let x = -step; x < canvas.width + step; x += step){
+    const h = height * scale * (0.7 + Math.sin((x+offset)*0.001 + depth*10)*0.3);
+    ctx.lineTo(x + offset*0.001, canvas.height - h);
+    ctx.lineTo(x + step/2 + offset*0.001, canvas.height - h*0.6);
+  }
+  ctx.lineTo(canvas.width, canvas.height);
+  ctx.closePath(); ctx.fill(); ctx.restore();
+}
+
+// ============================================================
+//  ЛАНДШАФТ
+// ============================================================
+function ensureTerrainCanvas(){
+  const w = Math.max(1, Math.ceil(WORLD_WIDTH));
+  const h = Math.max(1, Math.ceil(WORLD_HEIGHT));
+  if(!terrainCanvas || terrainCanvas.width !== w || terrainCanvas.height !== h){
+    terrainCanvas = document.createElement('canvas');
+    terrainCanvas.width = w; terrainCanvas.height = h;
+    terrainCtx = terrainCanvas.getContext('2d');
+  }
+}
+
+function drawTerrain(){
+  if(terrain.length < 2) return;
+  ensureTerrainCanvas();
+  const tctx = terrainCtx;
+  tctx.clearRect(0, 0, terrainCanvas.width, terrainCanvas.height);
+  tctx.save();
+  tctx.beginPath();
+  tctx.moveTo(0, WORLD_HEIGHT);
+  for(const p of terrain) tctx.lineTo(p.x, p.y);
+  tctx.lineTo(WORLD_WIDTH, WORLD_HEIGHT);
+  tctx.closePath();
+  const tg = tctx.createLinearGradient(0, WORLD_HEIGHT*0.3, 0, WORLD_HEIGHT);
+  tg.addColorStop(0, level.accent); tg.addColorStop(0.08, level.ground); tg.addColorStop(1, level.groundEdge);
+  tctx.fillStyle = tg; tctx.fill();
+  tctx.strokeStyle = level.groundEdge; tctx.lineWidth = 2; tctx.stroke();
+  tctx.restore();
+
+  tctx.save();
+  tctx.globalCompositeOperation = 'destination-out';
+  for(const h of holes){
+    tctx.beginPath(); tctx.arc(h.x, h.y, h.r, 0, Math.PI*2); tctx.fill();
+    tctx.beginPath();
+    for(let a=0;a<Math.PI*2;a+=0.4){
+      const rr = h.r + Math.sin(a*5 + h.x)*2;
+      tctx.moveTo(h.x + Math.cos(a)*rr, h.y + Math.sin(a)*rr);
+      tctx.arc(h.x, h.y, rr, a, a+0.4);
+    }
+    tctx.fill();
+  }
+  tctx.restore();
+
+  ctx.drawImage(terrainCanvas, 0, 0);
+
+  for(const d of decals){
+    if(d.alpha <= 0.05) continue;
+    if(d.type === 'blood'){
+      ctx.fillStyle = `rgba(120,10,10,${d.alpha})`;
+      ctx.beginPath(); ctx.ellipse(d.x, d.y, d.r, d.r*0.5, 0, 0, Math.PI*2); ctx.fill();
+    } else if(d.type === 'crater'){
+      ctx.fillStyle = `rgba(20,10,5,${d.alpha})`;
+      ctx.beginPath(); ctx.ellipse(d.x, d.y, d.r, d.r*0.4, 0, 0, Math.PI*2); ctx.fill();
+    }
+  }
+
+  ctx.fillStyle = level.accent; ctx.globalAlpha = 0.55;
+  for(let i=0;i<terrain.length;i+=3){
+    const p = terrain[i];
+    if(isInsideHole(p.x, p.y)) continue;
+    const sway = Math.sin(time*0.05 + i*0.3) * 2;
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    ctx.lineTo(p.x-3 + sway*0.5, p.y-8 - Math.abs(sway)*0.3);
+    ctx.lineTo(p.x+3, p.y-8);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  for(const o of objects){ if(o.hp > 0) drawObject(o); }
+}
+
+function isInsideHole(x, y){
+  for(const h of holes) if(Math.hypot(x-h.x, y-h.y) < h.r - 1) return true;
+  return false;
+}
+
+function drawObject(o){
+  ctx.save();
+  const alpha = clamp(o.hp / o.maxHp, 0.3, 1);
+  ctx.globalAlpha = alpha;
+  if(o.type === 'tree'){
+    const sway = Math.sin(time*0.02 + o.phase) * 2;
+    ctx.fillStyle = '#3a2a1a'; ctx.fillRect(o.x-4, o.y+o.h-30, 8, 30);
+    ctx.fillStyle = level.id === 'quel' ? '#6a3a8a' : '#2a5a2a';
+    ctx.beginPath();
+    ctx.arc(o.x + sway, o.y+15, 22, 0, Math.PI*2);
+    ctx.arc(o.x-12 + sway, o.y+25, 16, 0, Math.PI*2);
+    ctx.arc(o.x+12 + sway, o.y+25, 16, 0, Math.PI*2);
+    ctx.fill();
+  } else if(o.type === 'rock'){
+    const g = ctx.createLinearGradient(o.x, o.y, o.x, o.y+o.h);
+    g.addColorStop(0, '#7a7a8a'); g.addColorStop(1, '#3a3a4a');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(o.x-o.w/2, o.y+o.h);
+    ctx.lineTo(o.x-o.w/3, o.y);
+    ctx.lineTo(o.x+o.w/4, o.y+4);
+    ctx.lineTo(o.x+o.w/2, o.y+o.h);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#2a2a3a'; ctx.lineWidth = 2; ctx.stroke();
+  } else if(o.type === 'crystal'){
+    const pulse = 0.8 + 0.2*Math.sin(time*0.08 + o.phase);
+    ctx.fillStyle = level.accent;
+    ctx.beginPath();
+    ctx.moveTo(o.x, o.y); ctx.lineTo(o.x+o.w/2, o.y+o.h/2);
+    ctx.lineTo(o.x, o.y+o.h); ctx.lineTo(o.x-o.w/2, o.y+o.h/2);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.shadowColor = level.accent; ctx.shadowBlur = 15*pulse; ctx.fill(); ctx.shadowBlur = 0;
+  } else if(o.type === 'coral'){
+    const sway = Math.sin(time*0.04 + o.phase)*3;
+    ctx.strokeStyle = '#ff7a9a'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+    for(let i=0;i<3;i++){
+      ctx.beginPath();
+      ctx.moveTo(o.x + (i-1)*6, o.y+o.h);
+      ctx.quadraticCurveTo(o.x + (i-1)*10 + sway, o.y+o.h/2, o.x + (i-1)*14 + sway, o.y);
+      ctx.stroke();
+    }
+  } else if(o.type === 'cactus'){
+    ctx.fillStyle = '#3a7a3a';
+    ctx.fillRect(o.x-4, o.y, 8, o.h);
+    ctx.fillRect(o.x-12, o.y+10, 8, 4);
+    ctx.fillRect(o.x+4, o.y+16, 8, 4);
+  }
+  ctx.restore();
+}
+
+// ============================================================
+//  ЮНИТЫ — ОТРИСОВКА
+// ============================================================
+function drawUnit(u){
+  if(!u.alive && (!u.anim || u.anim.deathTimer <= 0)) return;
+  ctx.save();
+  if(u.invisible && u.team !== 'orc') ctx.globalAlpha = 0.25;
+  if(u.invisible && u.team === 'orc') ctx.globalAlpha = 0.4;
+  let deathT = 0;
+  if(!u.alive && u.anim){
+    deathT = clamp(1 - u.anim.deathTimer/60, 0, 1);
+    ctx.globalAlpha *= (1 - deathT*0.8);
+  }
+  const a = u.anim || {};
+  const breath = Math.sin(a.breathPhase || 0) * 1.5;
+  const walk = Math.sin(a.walkCycle || 0);
+  const bob = (u.onGround ? 0 : -2) + walk * 0.8;
+  const recoil = a.recoil || 0;
+
+  if(u.alive || deathT < 0.5){
+    const gy = getGroundY(u.x);
+    ctx.fillStyle = `rgba(0,0,0,${0.35*(1-deathT)})`;
+    ctx.beginPath(); ctx.ellipse(u.x, gy - 2, UNIT_RADIUS*1.1, 5, 0, 0, Math.PI*2); ctx.fill();
+  }
+  let hitShake = 0;
+  if(a.hitFlash > 0) hitShake = Math.sin(a.hitFlash*1.5) * 3;
+  const x = u.x + hitShake;
+  const y = u.y + breath*0.3;
+  if(!u.alive && u.anim){
+    ctx.translate(x, y); ctx.rotate(u.anim.deathRot); ctx.translate(-x, -y);
+  }
+  const bodyOffsetX = -Math.cos(u.aimAngle) * recoil * 0.4;
+  const bodyOffsetY = -Math.sin(u.aimAngle) * recoil * 0.4;
+
+  // Определяем, куда должен смотреть юнит:
+  // - орки смотрят вправо (в сторону врагов),
+  // - враги смотрят влево (в сторону орков).
+  // Если реальный aimAngle смотрит "не туда", отражаем всё тело.
+  const baseFacing = u.team === 'orc' ? 1 : -1;
+  const aimDir = Math.cos(u.aimAngle) >= 0 ? 1 : -1;
+  const needFlip = aimDir !== baseFacing;
+
+  ctx.save();
+  if(needFlip){
+    // отражаем всё относительно вертикальной оси через центр юнита
+    ctx.translate(x, 0);
+    ctx.scale(-1, 1);
+    ctx.translate(-x, 0);
+  }
+
+  const drawFn = ({
+    orc: drawOrc, troll: drawTroll, goblin: drawGoblin, ogre: drawOgre,
+    humans: drawHuman, gnomes: drawGnome, dwarves: drawDwarf,
+    merfolk: drawMerfolk, elves: drawElf, ogres: drawOgre
+  })[u.race] || drawHuman;
+  drawFn(u, x + bodyOffsetX, y + bodyOffsetY + bob, breath, walk, a);
+
+  ctx.restore();
+  if(a.hitFlash > 0){
+    ctx.globalCompositeOperation = 'source-atop';
+    ctx.fillStyle = `rgba(255,80,80,${a.hitFlash/24})`;
+    ctx.beginPath(); ctx.arc(x, y, 34, 0, Math.PI*2); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  ctx.restore();
+  if(!u.alive) return;
+
+  if(u.burrowedTimer > 0){
+    ctx.fillStyle = 'rgba(120,80,40,0.6)';
+    ctx.beginPath(); ctx.ellipse(u.x, getGroundY(u.x)-2, 22, 6, 0, 0, Math.PI*2); ctx.fill();
+  }
+
+  const barW = 46, barH = 6;
+  const bx = u.x - barW/2, by = u.y - UNIT_RADIUS - 30;
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillRect(bx-1, by-1, barW+2, barH+2);
+  const hp = u.health/u.maxHealth;
+  const hpColor = u.team === 'orc'
+    ? (hp>0.6?'#4caf50':(hp>0.3?'#ff9800':'#f44336'))
+    : (hp>0.6?'#c04040':(hp>0.3?'#ff8040':'#800000'));
+  ctx.fillStyle = hpColor;
+  ctx.fillRect(bx, by, barW*hp, barH);
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.fillRect(bx, by, barW*hp, 2);
+
+  ctx.fillStyle = u.team === 'orc' ? '#ffd070' : '#c8e0ff';
+  ctx.font = 'bold 10px Trebuchet MS, sans-serif';
+  ctx.textAlign = 'center';
+  const label = u.name + (u.level>1 ? ' ['+u.level+']' : '');
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+  ctx.strokeText(label, u.x, by-4);
+  ctx.fillText(label, u.x, by-4);
+
+  let effX = u.x - 22;
+  if(u.rageTimer > 0){ drawEffectIcon(effX, by-16, '#ff3030', '!'); effX += 16; }
+  if(u.invulnTimer > 0){ drawEffectIcon(effX, by-16, '#c8c8c8', 'S'); effX += 16; }
+  if(u.invisible){ drawEffectIcon(effX, by-16, '#88aaff', 'I'); effX += 16; }
+  if(u.hasShield){ drawEffectIcon(effX, by-16, '#d4af37', 'D'); effX += 16; }
+
+  if(u.hasActed){
+    ctx.strokeStyle = 'rgba(150,150,150,0.9)'; ctx.lineWidth = 2;
+    const cx = u.x + barW/2 + 8, cy = by + barH/2;
+    ctx.beginPath();
+    ctx.moveTo(cx-4,cy-4); ctx.lineTo(cx+4,cy+4);
+    ctx.moveTo(cx+4,cy-4); ctx.lineTo(cx-4,cy+4);
+    ctx.stroke();
+  }
+
+  const cur = getCurrentUnit();
+  if(cur && cur.id === u.id){
+    const col = aiThinking ? '#ff4444' : (turnState==='aiming' ? '#ffd070' : '#888');
+    const pulse = 0.6 + 0.4*Math.sin(time*0.1);
+    ctx.strokeStyle = col; ctx.globalAlpha = pulse; ctx.lineWidth = 3;
+    ctx.setLineDash([5,5]);
+    ctx.beginPath(); ctx.arc(u.x, u.y, UNIT_RADIUS+10, 0, Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
+  }
+
+  if(u.sleepTimer > 0){
+    const zz = Math.sin(time*0.08)*3;
+    ctx.fillStyle = '#aaf'; ctx.font = 'bold 14px sans-serif';
+    ctx.fillText('z', u.x+14+zz, u.y-22);
+    ctx.font = 'bold 11px sans-serif';
+    ctx.fillText('z', u.x+22+zz, u.y-32);
+  }
+}
+
+function drawEffectIcon(x, y, color, letter){
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.75)';
+  ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = color; ctx.font = 'bold 9px sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(letter, x, y+1);
+  ctx.textBaseline = 'alphabetic'; ctx.restore();
+}
+
+function drawEyes(x, y, radius, a, blink, dirX, dirY){
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.ellipse(x - radius*0.4, y, radius*0.28, radius*0.32, 0, 0, Math.PI*2);
+  ctx.ellipse(x + radius*0.4, y, radius*0.28, radius*0.32, 0, 0, Math.PI*2);
+  ctx.fill();
+  const px = clamp(dirX, -1, 1) * radius*0.1;
+  const py = clamp(dirY, -1, 1) * radius*0.1;
+  if(blink > 0){
+    ctx.strokeStyle = '#333'; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x - radius*0.6, y); ctx.lineTo(x - radius*0.2, y);
+    ctx.moveTo(x + radius*0.2, y); ctx.lineTo(x + radius*0.6, y);
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = '#111';
+    ctx.beginPath();
+    ctx.arc(x - radius*0.4 + px, y + py, radius*0.14, 0, Math.PI*2);
+    ctx.arc(x + radius*0.4 + px, y + py, radius*0.14, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.beginPath();
+    ctx.arc(x - radius*0.45 + px, y - radius*0.05 + py, radius*0.05, 0, Math.PI*2);
+    ctx.arc(x + radius*0.35 + px, y - radius*0.05 + py, radius*0.05, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+function drawOrc(u, x, y, breath, walk, a){
+  const legSwing = walk * 3;
+  const blink = a.blink || 0;
+  const aim = u.aimAngle;
+  const dirX = Math.cos(aim), dirY = Math.sin(aim);
+  ctx.fillStyle = '#3a5a1a';
+  ctx.fillRect(x-8, y+10 + legSwing*0.3, 6, 12 - legSwing*0.3);
+  ctx.fillRect(x+2, y+10 - legSwing*0.3, 6, 12 + legSwing*0.3);
+  ctx.fillStyle = '#2a1a0a';
+  ctx.fillRect(x-9, y+20 + legSwing*0.3, 8, 5);
+  ctx.fillRect(x+1, y+20 - legSwing*0.3, 8, 5);
+  const tg = ctx.createLinearGradient(x, y-10, x, y+14);
+  tg.addColorStop(0, '#6a4a2a'); tg.addColorStop(1, '#4a2a1a');
+  ctx.fillStyle = tg;
+  ctx.beginPath();
+  ctx.moveTo(x-11, y-8); ctx.lineTo(x+11, y-8);
+  ctx.lineTo(x+9, y+12); ctx.lineTo(x-9, y+12);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#2a1a0a'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = '#3a2a1a';
+  ctx.beginPath(); ctx.ellipse(x-13, y-6, 6, 5, -0.3, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x+13, y-6, 6, 5, 0.3, 0, Math.PI*2); ctx.fill();
+  const hg = ctx.createRadialGradient(x-4, y-20, 2, x, y-16, 14);
+  hg.addColorStop(0, '#8aaa4a'); hg.addColorStop(1, '#5a7a2a');
+  ctx.fillStyle = hg;
+  ctx.beginPath(); ctx.arc(x, y-16, 11, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#3a5a1a'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = '#5a7a2a';
+  ctx.beginPath(); ctx.moveTo(x-10, y-18); ctx.lineTo(x-16, y-24); ctx.lineTo(x-10, y-12); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(x+10, y-18); ctx.lineTo(x+16, y-24); ctx.lineTo(x+10, y-12); ctx.fill();
+  drawEyes(x, y-17, 11, aim, blink, dirX, dirY);
+  ctx.strokeStyle = '#2a3a0a'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(x-6, y-22); ctx.lineTo(x-2, y-21); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x+6, y-22); ctx.lineTo(x+2, y-21); ctx.stroke();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.moveTo(x-3, y-11); ctx.lineTo(x-2, y-7); ctx.lineTo(x-1, y-11); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(x+1, y-11); ctx.lineTo(x+2, y-7); ctx.lineTo(x+3, y-11); ctx.fill();
+  ctx.fillStyle = '#5a5a5a';
+  ctx.beginPath(); ctx.arc(x, y-20, 12, Math.PI, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#3a3a3a';
+  ctx.fillRect(x-12, y-20, 24, 3);
+  ctx.fillStyle = '#e8d8b8';
+  ctx.beginPath();
+  ctx.moveTo(x-10, y-24); ctx.quadraticCurveTo(x-20, y-32, x-16, y-40);
+  ctx.quadraticCurveTo(x-14, y-32, x-8, y-26); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x+10, y-24); ctx.quadraticCurveTo(x+20, y-32, x+16, y-40);
+  ctx.quadraticCurveTo(x+14, y-32, x+8, y-26); ctx.fill();
+  drawWeaponFor(u, x, y, aim, a);
+}
+function drawTroll(u, x, y, breath, walk, a){
+  const legSwing = walk * 3;
+  const blink = a.blink || 0;
+  const aim = u.aimAngle;
+  const dirX = Math.cos(aim), dirY = Math.sin(aim);
+  ctx.fillStyle = '#3a5a7a';
+  ctx.fillRect(x-7, y+10 + legSwing*0.3, 5, 12 - legSwing*0.3);
+  ctx.fillRect(x+2, y+10 - legSwing*0.3, 5, 12 + legSwing*0.3);
+  const tg = ctx.createLinearGradient(x, y-16, x, y+16);
+  tg.addColorStop(0, '#8abaea'); tg.addColorStop(1, '#4a7aaa');
+  ctx.fillStyle = tg;
+  ctx.beginPath(); ctx.ellipse(x, y, 12, 16, 0, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#3a5a7a'; ctx.lineWidth = 2; ctx.stroke();
+  const hg = ctx.createRadialGradient(x-4, y-24, 2, x, y-20, 15);
+  hg.addColorStop(0, '#aadaff'); hg.addColorStop(1, '#6a9aca');
+  ctx.fillStyle = hg;
+  ctx.beginPath(); ctx.arc(x, y-20, 12, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#6a9aca';
+  ctx.beginPath(); ctx.moveTo(x-10, y-22); ctx.lineTo(x-17, y-28); ctx.lineTo(x-10, y-16); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(x+10, y-22); ctx.lineTo(x+17, y-28); ctx.lineTo(x+10, y-16); ctx.fill();
+  drawEyes(x, y-21, 12, aim, blink, dirX, dirY);
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.moveTo(x-3, y-14); ctx.lineTo(x-2, y-9); ctx.lineTo(x-1, y-14); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(x+1, y-14); ctx.lineTo(x+2, y-9); ctx.lineTo(x+3, y-14); ctx.fill();
+  drawWeaponFor(u, x, y, aim, a);
+}
+function drawGoblin(u, x, y, breath, walk, a){
+  const legSwing = walk * 3;
+  const blink = a.blink || 0;
+  const aim = u.aimAngle;
+  const dirX = Math.cos(aim), dirY = Math.sin(aim);
+  ctx.fillStyle = '#5a7a2a';
+  ctx.fillRect(x-6, y+8 + legSwing*0.3, 4, 10 - legSwing*0.3);
+  ctx.fillRect(x+2, y+8 - legSwing*0.3, 4, 10 + legSwing*0.3);
+  const tg = ctx.createLinearGradient(x, y-10, x, y+10);
+  tg.addColorStop(0, '#9aba5a'); tg.addColorStop(1, '#6a8a2a');
+  ctx.fillStyle = tg;
+  ctx.beginPath(); ctx.ellipse(x, y, 8, 11, 0, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#4a6a1a'; ctx.lineWidth = 1.5; ctx.stroke();
+  const hg = ctx.createRadialGradient(x-3, y-18, 1, x, y-16, 11);
+  hg.addColorStop(0, '#bada7a'); hg.addColorStop(1, '#7a9a3a');
+  ctx.fillStyle = hg;
+  ctx.beginPath(); ctx.arc(x, y-16, 10, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#7a9a3a';
+  ctx.beginPath(); ctx.moveTo(x-9, y-20); ctx.lineTo(x-16, y-22); ctx.lineTo(x-9, y-14); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(x+9, y-20); ctx.lineTo(x+16, y-22); ctx.lineTo(x+9, y-14); ctx.fill();
+  drawEyes(x, y-17, 10, aim, blink, dirX, dirY);
+  drawWeaponFor(u, x, y, aim, a);
+}
+function drawOgre(u, x, y, breath, walk, a){
+  const legSwing = walk * 2.5;
+  const blink = a.blink || 0;
+  const aim = u.aimAngle;
+  const dirX = Math.cos(aim), dirY = Math.sin(aim);
+  ctx.fillStyle = '#7a5a2a';
+  ctx.fillRect(x-11, y+14 + legSwing*0.3, 8, 16 - legSwing*0.3);
+  ctx.fillRect(x+3, y+14 - legSwing*0.3, 8, 16 + legSwing*0.3);
+  const tg = ctx.createLinearGradient(x, y-24, x, y+24);
+  tg.addColorStop(0, '#c09a5a'); tg.addColorStop(1, '#8a6a2a');
+  ctx.fillStyle = tg;
+  ctx.beginPath(); ctx.ellipse(x, y, 18, 22, 0, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#5a3a1a'; ctx.lineWidth = 2; ctx.stroke();
+  const hg = ctx.createRadialGradient(x-5, y-32, 3, x, y-28, 18);
+  hg.addColorStop(0, '#e0ba7a'); hg.addColorStop(1, '#a07a3a');
+  ctx.fillStyle = hg;
+  ctx.beginPath(); ctx.arc(x, y-28, 15, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#5a3a1a'; ctx.stroke();
+  drawEyes(x, y-30, 15, aim, blink, dirX, dirY);
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.moveTo(x-4, y-22); ctx.lineTo(x-3, y-16); ctx.lineTo(x-2, y-22); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(x+2, y-22); ctx.lineTo(x+3, y-16); ctx.lineTo(x+4, y-22); ctx.fill();
+  ctx.fillStyle = '#a07a3a';
+  ctx.beginPath(); ctx.ellipse(x-15, y-30, 5, 7, 0.3, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x+15, y-30, 5, 7, -0.3, 0, Math.PI*2); ctx.fill();
+  drawWeaponFor(u, x, y, aim, a);
+}
+function drawHuman(u, x, y, breath, walk, a){
+  const legSwing = walk * 2.5;
+  const blink = a.blink || 0;
+  const aim = u.aimAngle;
+  const dirX = Math.cos(aim), dirY = Math.sin(aim);
+  ctx.fillStyle = '#2a5a2a';
+  ctx.fillRect(x-7, y+10 + legSwing*0.3, 5, 12 - legSwing*0.3);
+  ctx.fillRect(x+2, y+10 - legSwing*0.3, 5, 12 + legSwing*0.3);
+  ctx.fillStyle = '#b8962a';
+  ctx.fillRect(x-8, y+20 + legSwing*0.3, 7, 5);
+  ctx.fillRect(x+1, y+20 - legSwing*0.3, 7, 5);
+  const cloakSway = Math.sin(time*0.06 + u.id)*2;
+  ctx.fillStyle = '#1a4a1a';
+  ctx.beginPath();
+  ctx.moveTo(x-12, y-8); ctx.lineTo(x+12, y-8);
+  ctx.lineTo(x+15 + cloakSway, y+16); ctx.lineTo(x-15 + cloakSway, y+16);
+  ctx.closePath(); ctx.fill();
+  const tg = ctx.createLinearGradient(x, y-8, x, y+14);
+  tg.addColorStop(0, '#3a8a3a'); tg.addColorStop(1, '#1a5a1a');
+  ctx.fillStyle = tg;
+  ctx.beginPath();
+  ctx.moveTo(x-10, y-8); ctx.lineTo(x+10, y-8);
+  ctx.lineTo(x+9, y+12); ctx.lineTo(x-9, y+12);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#0a3a0a'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = '#d4af37';
+  ctx.beginPath();
+  ctx.moveTo(x-8, y-6); ctx.lineTo(x+8, y-6);
+  ctx.lineTo(x+6, y+4); ctx.lineTo(x-6, y+4);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#8a6a1a'; ctx.lineWidth = 1.5; ctx.stroke();
+  const hg = ctx.createRadialGradient(x-3, y-20, 1, x, y-16, 11);
+  hg.addColorStop(0, '#f8d0a8'); hg.addColorStop(1, '#c89870');
+  ctx.fillStyle = hg;
+  ctx.beginPath(); ctx.arc(x, y-16, 9, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#a07850'; ctx.lineWidth = 1.5; ctx.stroke();
+  drawEyes(x, y-17, 9, aim, blink, dirX, dirY);
+  ctx.fillStyle = '#d4af37';
+  ctx.beginPath(); ctx.arc(x, y-19, 10, Math.PI, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#8a6a1a'; ctx.stroke();
+  ctx.fillStyle = '#8a6a1a';
+  ctx.fillRect(x-10, y-19, 20, 2);
+  drawWeaponFor(u, x, y, aim, a);
+}
+function drawGnome(u, x, y, breath, walk, a){
+  const legSwing = walk * 3;
+  const blink = a.blink || 0;
+  const aim = u.aimAngle;
+  const dirX = Math.cos(aim), dirY = Math.sin(aim);
+  ctx.fillStyle = '#5a3a2a';
+  ctx.fillRect(x-5, y+6 + legSwing*0.3, 4, 10 - legSwing*0.3);
+  ctx.fillRect(x+1, y+6 - legSwing*0.3, 4, 10 + legSwing*0.3);
+  const tg = ctx.createLinearGradient(x, y-6, x, y+8);
+  tg.addColorStop(0, '#a06a4a'); tg.addColorStop(1, '#6a3a2a');
+  ctx.fillStyle = tg;
+  ctx.beginPath(); ctx.ellipse(x, y, 8, 10, 0, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#4a2a1a'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = '#e8b890';
+  ctx.beginPath(); ctx.arc(x, y-14, 9, 0, Math.PI*2); ctx.fill();
+  drawEyes(x, y-15, 9, aim, blink, dirX, dirY);
+  const beardSway = Math.sin(time*0.05 + u.id)*1.5;
+  ctx.fillStyle = '#e8e8e8';
+  ctx.beginPath();
+  ctx.moveTo(x-7, y-12);
+  ctx.quadraticCurveTo(x + beardSway, y+4, x+7, y-12);
+  ctx.lineTo(x+3, y-12);
+  ctx.quadraticCurveTo(x + beardSway, y-2, x-3, y-12);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#aaa'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.fillStyle = '#c02020';
+  ctx.beginPath();
+  ctx.moveTo(x-9, y-16); ctx.lineTo(x+9, y-16); ctx.lineTo(x, y-30);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#8a1010'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(x, y-30, 2.5, 0, Math.PI*2); ctx.fill();
+  drawWeaponFor(u, x, y, aim, a);
+}
+function drawDwarf(u, x, y, breath, walk, a){
+  const legSwing = walk * 3;
+  const blink = a.blink || 0;
+  const aim = u.aimAngle;
+  const dirX = Math.cos(aim), dirY = Math.sin(aim);
+  ctx.fillStyle = '#5a3a2a';
+  ctx.fillRect(x-6, y+8 + legSwing*0.3, 5, 12 - legSwing*0.3);
+  ctx.fillRect(x+1, y+8 - legSwing*0.3, 5, 12 + legSwing*0.3);
+  const tg = ctx.createLinearGradient(x, y-8, x, y+10);
+  tg.addColorStop(0, '#8a6a4a'); tg.addColorStop(1, '#4a2a1a');
+  ctx.fillStyle = tg;
+  ctx.beginPath();
+  ctx.moveTo(x-10, y-8); ctx.lineTo(x+10, y-8);
+  ctx.lineTo(x+8, y+10); ctx.lineTo(x-8, y+10);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#2a1a0a'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = '#8a8a8a';
+  ctx.beginPath();
+  ctx.moveTo(x-7, y-5); ctx.lineTo(x+7, y-5);
+  ctx.lineTo(x+5, y+5); ctx.lineTo(x-5, y+5);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#4a4a4a'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = '#e8b890';
+  ctx.beginPath(); ctx.arc(x, y-16, 9, 0, Math.PI*2); ctx.fill();
+  drawEyes(x, y-17, 9, aim, blink, dirX, dirY);
+  const beardSway = Math.sin(time*0.05 + u.id)*1.5;
+  ctx.fillStyle = '#c8a080';
+  ctx.beginPath();
+  ctx.moveTo(x-8, y-13);
+  ctx.quadraticCurveTo(x + beardSway, y+8, x+8, y-13);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#6a6a6a';
+  ctx.beginPath(); ctx.arc(x, y-19, 10, Math.PI, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#4a4a4a';
+  ctx.fillRect(x-10, y-19, 20, 3);
+  ctx.fillStyle = '#e8d8b8';
+  ctx.beginPath();
+  ctx.moveTo(x-9, y-22); ctx.quadraticCurveTo(x-16, y-28, x-13, y-34);
+  ctx.quadraticCurveTo(x-12, y-28, x-7, y-24); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x+9, y-22); ctx.quadraticCurveTo(x+16, y-28, x+13, y-34);
+  ctx.quadraticCurveTo(x+12, y-28, x+7, y-24); ctx.fill();
+  drawWeaponFor(u, x, y, aim, a);
+}
+function drawMerfolk(u, x, y, breath, walk, a){
+  const blink = a.blink || 0;
+  const aim = u.aimAngle;
+  const dirX = Math.cos(aim), dirY = Math.sin(aim);
+  const isNaga = u.weapon === 'trident';
+  const tailPhase = time*0.08 + u.id;
+  if(isNaga){
+    ctx.fillStyle = '#2a8a6a';
+    ctx.beginPath();
+    ctx.moveTo(x-6, y+6);
+    const t1 = Math.sin(tailPhase)*4, t2 = Math.sin(tailPhase+1)*6;
+    ctx.quadraticCurveTo(x-16 + t1, y+22, x-8 + t2, y+34);
+    ctx.quadraticCurveTo(x+16 + t1, y+22, x+6, y+6);
+    ctx.closePath(); ctx.fill();
+    const tg = ctx.createLinearGradient(x, y-10, x, y+8);
+    tg.addColorStop(0, '#4aca9a'); tg.addColorStop(1, '#2a8a6a');
+    ctx.fillStyle = tg;
+    ctx.beginPath(); ctx.ellipse(x, y, 10, 14, 0, 0, Math.PI*2); ctx.fill();
+  } else {
+    ctx.fillStyle = '#3aaa8a';
+    ctx.beginPath();
+    ctx.moveTo(x-7, y+6);
+    const t1 = Math.sin(tailPhase)*4, t2 = Math.sin(tailPhase+1)*6;
+    ctx.quadraticCurveTo(x-14 + t1, y+26, x + t2, y+34);
+    ctx.quadraticCurveTo(x+14 + t1, y+26, x+7, y+6);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#66ddff';
+    ctx.beginPath();
+    ctx.moveTo(x + t2, y+34); ctx.lineTo(x-4 + t2, y+42); ctx.lineTo(x+4 + t2, y+42);
+    ctx.closePath(); ctx.fill();
+    const tg = ctx.createLinearGradient(x, y-8, x, y+8);
+    tg.addColorStop(0, '#7adaca'); tg.addColorStop(1, '#3aaa8a');
+    ctx.fillStyle = tg;
+    ctx.beginPath(); ctx.ellipse(x, y, 8, 12, 0, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.fillStyle = '#f8d0a8';
+  ctx.beginPath(); ctx.arc(x, y-16, 9, 0, Math.PI*2); ctx.fill();
+  drawEyes(x, y-17, 9, aim, blink, dirX, dirY);
+  const hairSway = Math.sin(time*0.1 + u.id)*3;
+  ctx.fillStyle = isNaga ? '#1a4a3a' : '#1a6a8a';
+  ctx.beginPath(); ctx.arc(x, y-18, 10, Math.PI*1.1, Math.PI*1.9); ctx.fill();
+  drawWeaponFor(u, x, y, aim, a);
+}
+function drawElf(u, x, y, breath, walk, a){
+  const legSwing = walk * 2.5;
+  const blink = a.blink || 0;
+  const aim = u.aimAngle;
+  const dirX = Math.cos(aim), dirY = Math.sin(aim);
+  ctx.fillStyle = '#3a2a5a';
+  ctx.fillRect(x-6, y+10 + legSwing*0.3, 5, 12 - legSwing*0.3);
+  ctx.fillRect(x+1, y+10 - legSwing*0.3, 5, 12 + legSwing*0.3);
+  ctx.fillStyle = '#c0a0ff';
+  ctx.fillRect(x-7, y+20 + legSwing*0.3, 6, 4);
+  ctx.fillRect(x+1, y+20 - legSwing*0.3, 6, 4);
+  const cloakSway = Math.sin(time*0.06 + u.id)*2;
+  ctx.fillStyle = '#5a3a8a';
+  ctx.beginPath();
+  ctx.moveTo(x-10, y-8); ctx.lineTo(x+10, y-8);
+  ctx.lineTo(x+12 + cloakSway, y+14); ctx.lineTo(x-12 + cloakSway, y+14);
+  ctx.closePath(); ctx.fill();
+  const tg = ctx.createLinearGradient(x, y-8, x, y+12);
+  tg.addColorStop(0, '#7a5aba'); tg.addColorStop(1, '#4a2a8a');
+  ctx.fillStyle = tg;
+  ctx.beginPath();
+  ctx.moveTo(x-9, y-8); ctx.lineTo(x+9, y-8);
+  ctx.lineTo(x+8, y+12); ctx.lineTo(x-8, y+12);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#d4af37'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x, y-8); ctx.lineTo(x, y+12); ctx.stroke();
+  const hg = ctx.createRadialGradient(x-3, y-20, 1, x, y-16, 10);
+  hg.addColorStop(0, '#f8e0c0'); hg.addColorStop(1, '#d8b890');
+  ctx.fillStyle = hg;
+  ctx.beginPath(); ctx.arc(x, y-16, 8, 0, Math.PI*2); ctx.fill();
+  drawEyes(x, y-17, 8, aim, blink, dirX, dirY);
+  ctx.fillStyle = '#f8e0c0';
+  ctx.beginPath();
+  ctx.moveTo(x-8, y-17); ctx.lineTo(x-14, y-22); ctx.lineTo(x-8, y-13); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x+8, y-17); ctx.lineTo(x+14, y-22); ctx.lineTo(x+8, y-13); ctx.fill();
+  ctx.fillStyle = '#e8e0a0';
+  ctx.beginPath(); ctx.arc(x, y-18, 9, Math.PI*1.1, Math.PI*1.9); ctx.fill();
+  ctx.fillStyle = '#d4af37';
+  ctx.beginPath();
+  ctx.moveTo(x-8, y-22); ctx.lineTo(x-4, y-26); ctx.lineTo(x, y-22);
+  ctx.lineTo(x+4, y-26); ctx.lineTo(x+8, y-22);
+  ctx.closePath(); ctx.fill();
+  drawWeaponFor(u, x, y, aim, a);
+}
+
+function drawWeaponFor(u, x, y, a, anim){
+  const recoil = (anim && anim.recoil) || 0;
+  const armX = x + Math.cos(a)*14;
+  const armY = y + Math.sin(a)*10;
+  const armColor = (u.race === 'orc' || u.race === 'troll' || u.race === 'goblin' || u.race === 'ogre') ? '#6a8a3a' : '#e8b890';
+  ctx.strokeStyle = armColor; ctx.lineWidth = 5; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(armX, armY); ctx.stroke();
+  ctx.save();
+  ctx.translate(armX, armY); ctx.rotate(a); ctx.translate(-recoil*0.5, 0);
+  if(u.weapon === 'axe'){
+    ctx.fillStyle='#6a4a2a'; ctx.fillRect(0,-2,26,4);
+    ctx.fillStyle='#aaa';
+    ctx.beginPath(); ctx.moveTo(20,-10); ctx.lineTo(30,0); ctx.lineTo(20,10); ctx.lineTo(24,0); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='#666'; ctx.lineWidth=1.5; ctx.stroke();
+  } else if(u.weapon === 'spear'){
+    ctx.fillStyle='#6a4a2a'; ctx.fillRect(0,-1.5,34,3);
+    ctx.fillStyle='#ccc';
+    ctx.beginPath(); ctx.moveTo(32,-5); ctx.lineTo(44,0); ctx.lineTo(32,5); ctx.closePath(); ctx.fill();
+  } else if(u.weapon === 'sling'){
+    const spin = time*0.3;
+    ctx.strokeStyle='#8a6a3a'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(12,0,6,0,Math.PI*2); ctx.stroke();
+    ctx.fillStyle='#888';
+    ctx.beginPath(); ctx.arc(12 + Math.cos(spin)*6, Math.sin(spin)*6, 3, 0, Math.PI*2); ctx.fill();
+  } else if(u.weapon === 'gun'){
+    ctx.fillStyle='#333'; ctx.fillRect(0,-3,30,6);
+    ctx.fillStyle='#6a4a2a'; ctx.fillRect(0,-2,10,4);
+    ctx.fillStyle='#999'; ctx.beginPath(); ctx.arc(30,0,3,0,Math.PI*2); ctx.fill();
+    if(recoil > 8){ ctx.fillStyle = `rgba(255,220,100,${recoil/20})`; ctx.beginPath(); ctx.arc(34,0, 8, 0, Math.PI*2); ctx.fill(); }
+  } else if(u.weapon === 'bow'){
+    ctx.strokeStyle='#6a4a2a'; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.arc(0,0,18,-Math.PI/2.2,Math.PI/2.2); ctx.stroke();
+    ctx.strokeStyle='#ddd'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(6,-16); ctx.lineTo(6,16); ctx.stroke();
+  } else if(u.weapon === 'sword'){
+    ctx.fillStyle='#d4d4e0';
+    ctx.beginPath();
+    ctx.moveTo(0,-2.5); ctx.lineTo(24,-2); ctx.lineTo(30,0); ctx.lineTo(24,2); ctx.lineTo(0,2.5);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#d4af37'; ctx.fillRect(-2,-6,4,12);
+    ctx.fillStyle='#6a3a1a'; ctx.fillRect(-12,-2,10,4);
+  } else if(u.weapon === 'bomb'){
+    ctx.fillStyle='#222';
+    ctx.beginPath(); ctx.arc(12,0,7,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#f80'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(17,-3); ctx.lineTo(22,-8); ctx.stroke();
+  } else if(u.weapon === 'trident'){
+    ctx.fillStyle='#6a4a2a'; ctx.fillRect(0,-1.5,30,3);
+    ctx.fillStyle='#aaa';
+    ctx.beginPath(); ctx.moveTo(30,-8); ctx.lineTo(30,8); ctx.lineTo(34,8); ctx.lineTo(34,-8); ctx.closePath(); ctx.fill();
+    ctx.fillRect(36,-4,10,2); ctx.fillRect(36,2,10,2); ctx.fillRect(36,-1,10,2);
+  } else if(u.weapon === 'staff'){
+    ctx.fillStyle='#6a4a2a'; ctx.fillRect(0,-1.5,32,3);
+    const glow = 0.7 + 0.3*Math.sin(time*0.1);
+    ctx.shadowColor='#c080ff'; ctx.shadowBlur=15*glow;
+    ctx.fillStyle='#c080ff';
+    ctx.beginPath(); ctx.arc(34,0,6,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.arc(34,0,2.5,0,Math.PI*2); ctx.fill();
+  } else if(u.weapon === 'club'){
+    ctx.fillStyle='#4a2a1a'; ctx.fillRect(0,-3,26,6);
+    ctx.fillStyle='#6a4a2a';
+    ctx.beginPath(); ctx.arc(28,0,10,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#3a1a0a'; ctx.lineWidth=1; ctx.stroke();
+  } else if(u.weapon === 'claw'){
+    ctx.strokeStyle='#ddd'; ctx.lineWidth=2; ctx.lineCap='round';
+    for(let i=-1;i<=1;i++){
+      ctx.beginPath(); ctx.moveTo(0,i*4); ctx.lineTo(14,i*5); ctx.stroke();
+    }
+  } else if(u.weapon === 'sleep'){
+    ctx.strokeStyle='#aaf'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(0,0,10,0,Math.PI*2); ctx.stroke();
+    ctx.fillStyle='#ddf';
+    ctx.beginPath(); ctx.arc(0,0,4,0,Math.PI*2); ctx.fill();
+  } else if(u.weapon === 'shield'){
+    ctx.fillStyle='#6a4a2a';
+    ctx.beginPath(); ctx.ellipse(10,0,5,12,0,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+// ============================================================
+//  ПРИЦЕЛ / СНАРЯДЫ
+// ============================================================
+function drawAim(){
+  if(turnState !== 'aiming') return;
+  if(teleportMode){
+    const gy = getGroundY(mouse.worldX);
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    ctx.strokeStyle = '#c080ff'; ctx.lineWidth = 3;
+    ctx.setLineDash([6,4]);
+    ctx.beginPath(); ctx.arc(mouse.worldX, gy - UNIT_RADIUS, UNIT_RADIUS + 10, 0, Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.strokeStyle = 'rgba(192,128,255,0.6)';
+    ctx.beginPath(); ctx.moveTo(mouse.worldX, gy - UNIT_RADIUS - 60); ctx.lineTo(mouse.worldX, gy); ctx.stroke();
+    ctx.restore();
+    return;
+  }
+  if(healMode){
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    ctx.strokeStyle = '#80ff80'; ctx.lineWidth = 3;
+    ctx.setLineDash([6,4]);
+    const hovering = units.find(u => u.alive && u.team === 'orc' && Math.hypot(mouse.worldX - u.x, mouse.worldY - u.y) < UNIT_RADIUS + 14);
+    if(hovering){
+      ctx.beginPath(); ctx.arc(hovering.x, hovering.y, UNIT_RADIUS + 12, 0, Math.PI*2); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    ctx.restore();
+    return;
+  }
+  if(!mouse.down) return;
+  if(charging) return;
+  const unit = getCurrentUnit();
+  if(!unit || !unit.alive || unit.team !== 'orc') return;
+  if(unit.sleepTimer > 0) return;
+  const a = unit.aimAngle;
+  const len = 40 + (unit.power||50) * 1.2;
+  const ex = unit.x + Math.cos(a)*len;
+  const ey = unit.y + Math.sin(a)*len;
+  ctx.strokeStyle = 'rgba(255,180,80,0.9)';
+  ctx.lineWidth = 2.5; ctx.setLineDash([8,6]);
+  ctx.beginPath(); ctx.moveTo(unit.x, unit.y); ctx.lineTo(ex, ey); ctx.stroke();
+  ctx.setLineDash([]);
+  const pulse = 6 + Math.sin(time*0.3)*2;
+  ctx.shadowColor = '#ff6600'; ctx.shadowBlur = 12;
+  ctx.fillStyle = '#ff6600';
+  ctx.beginPath(); ctx.arc(ex, ey, pulse, 0, Math.PI*2); ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  const speed = getWeaponSpeed(unit);
+  let px = unit.x + Math.cos(a)*22, py = unit.y + Math.sin(a)*22;
+  let vx = Math.cos(a)*speed, vy = Math.sin(a)*speed;
+  ctx.moveTo(px, py);
+  for(let i=0;i<60;i++){
+    vy += GRAVITY; px += vx; py += vy;
+    if(py > getGroundY(px)) break;
+    ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+  const cx = unit.x, cy = unit.y - 60;
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillRect(cx-34, cy-8, 68, 14);
+  const pw = clamp(((unit.power||50) - AIM_POWER_MIN) / (AIM_POWER_MAX - AIM_POWER_MIN), 0, 1);
+  const grad = ctx.createLinearGradient(cx-30,0,cx+30,0);
+  grad.addColorStop(0,'#4caf50'); grad.addColorStop(0.5,'#ffc107'); grad.addColorStop(1,'#f44336');
+  ctx.fillStyle = grad;
+  ctx.fillRect(cx-30, cy-6, 60*pw, 10);
+  ctx.strokeStyle='#fff'; ctx.lineWidth=1; ctx.strokeRect(cx-30, cy-6, 60, 10);
+  ctx.fillStyle='#fff'; ctx.font='bold 11px sans-serif'; ctx.textAlign='center';
+  ctx.fillText(Math.round(unit.power||50), cx, cy+20);
+}
+
+function getWeaponSpeed(unit){
+  const p = unit.power||50;
+  switch(unit.weapon){
+    case 'axe': return 9 + p*0.12;
+    case 'spear': return 11 + p*0.16;
+    case 'sling': return 8 + p*0.18;
+    case 'gun': return 15 + p*0.22;
+    case 'bow': return 13 + p*0.2;
+    case 'bomb': return 9 + p*0.12;
+    case 'staff': return 10 + p*0.15;
+    case 'sleep': return 7 + p*0.1;
+    default: return 8 + p*0.14;
+  }
+}
+
+function drawProjectiles(){
+  if(projectile){
+    if(projectile.trail){
+      for(let i=0;i<projectile.trail.length;i++){
+        const t = projectile.trail[i];
+        const k = t.life / 18;
+        ctx.fillStyle = `rgba(255,200,0,${k*0.7})`;
+        ctx.beginPath(); ctx.arc(t.x, t.y, 3*k, 0, Math.PI*2); ctx.fill();
+      }
+      projectile.trail = projectile.trail.filter(t => --t.life > 0);
+    }
+    ctx.save();
+    ctx.translate(projectile.x, projectile.y);
+    ctx.rotate(projectile.rot || 0);
+    if(projectile.type === 'sleep'){
+      ctx.shadowColor = '#88aaff'; ctx.shadowBlur = 15;
+      ctx.fillStyle = '#bbddff';
+      ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
+    } else {
+      ctx.shadowColor = '#ffaa00'; ctx.shadowBlur = 12;
+      ctx.fillStyle = '#ffcc44';
+      ctx.beginPath(); ctx.arc(0, 0, projectile.radius, 0, Math.PI*2); ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+    ctx.restore();
+  }
+  for(const p of particles){
+    if(p.type === 'pellet'){ ctx.fillStyle = '#ffdd44'; ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fill(); }
+    else if(p.type === 'bomb'){
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot || 0);
+      ctx.fillStyle = '#222';
+      ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#f80'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(4,-4); ctx.lineTo(8,-10); ctx.stroke();
+      ctx.restore();
+    } else if(p.type === 'spark'){
+      const k = p.life / p.maxLife;
+      ctx.globalAlpha = k; ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r * k, 0, Math.PI*2); ctx.fill();
+      ctx.globalAlpha = 1;
+    } else if(p.type === 'blood'){
+      const k = p.life / p.maxLife;
+      ctx.globalAlpha = k; ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+      ctx.globalAlpha = 1;
+    } else if(p.type === 'dust'){
+      const k = p.life / p.maxLife;
+      ctx.globalAlpha = k * 0.6; ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r * (1 + (1-k)*2), 0, Math.PI*2); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+  if(explosion && explosion.maxRadius > 0){
+    const e = explosion;
+    ctx.shadowColor = '#ff6600'; ctx.shadowBlur = 30;
+    const grd = ctx.createRadialGradient(e.x,e.y,0,e.x,e.y,e.radius);
+    grd.addColorStop(0, `rgba(255,255,200,${e.alpha})`);
+    grd.addColorStop(0.4, `rgba(255,150,0,${e.alpha})`);
+    grd.addColorStop(1, 'rgba(255,0,0,0)');
+    ctx.fillStyle = grd;
+    ctx.beginPath(); ctx.arc(e.x, e.y, e.radius, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+  if(healEffect){
+    const h = healEffect;
+    const col = h.color || '#ffffaa';
+    ctx.shadowColor = col; ctx.shadowBlur = 30;
+    const grd = ctx.createRadialGradient(h.x,h.y,0,h.x,h.y,h.radius);
+    grd.addColorStop(0, col);
+    grd.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.globalAlpha = h.alpha * 0.6;
+    ctx.fillStyle = grd;
+    ctx.beginPath(); ctx.arc(h.x, h.y, h.radius, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
+  }
+}
+
+// ============================================================
+//  UI — WC3-СТИЛЬ
+// ============================================================
+function drawPanelFrame(x, y, w, h, opts){
+  opts = opts || {};
+  const bg = ctx.createLinearGradient(0, y, 0, y+h);
+  bg.addColorStop(0, opts.top || '#6a4a20');
+  bg.addColorStop(0.15, opts.mid || '#4a3010');
+  bg.addColorStop(0.85, opts.lowMid || '#2a1a08');
+  bg.addColorStop(1, opts.bottom || '#1a0f05');
+  ctx.fillStyle = bg;
+  ctx.fillRect(x, y, w, h);
+  const gold = ctx.createLinearGradient(0, y, 0, y+4);
+  gold.addColorStop(0, '#ffe090'); gold.addColorStop(0.5, '#c8a050'); gold.addColorStop(1, '#5a3a10');
+  ctx.fillStyle = gold; ctx.fillRect(x, y, w, 4);
+  const stone = ctx.createLinearGradient(0, y+h-4, 0, y+h);
+  stone.addColorStop(0, '#3a2a18'); stone.addColorStop(1, '#0a0500');
+  ctx.fillStyle = stone; ctx.fillRect(x, y+h-4, w, 4);
+  drawCorner(x, y, 1, 1);
+  drawCorner(x+w, y, -1, 1);
+  drawCorner(x, y+h, 1, -1);
+  drawCorner(x+w, y+h, -1, -1);
+  for(let i = x + 20; i < x + w - 20; i += 60){
+    drawRivet(i, y + 8);
+    drawRivet(i, y + h - 8);
+  }
+}
+
+function drawCorner(x, y, sx, sy){
+  ctx.save();
+  ctx.translate(x, y); ctx.scale(sx, sy);
+  ctx.fillStyle = '#c8a050';
+  ctx.beginPath();
+  ctx.moveTo(0, 0); ctx.lineTo(22, 0); ctx.lineTo(22, 4); ctx.lineTo(8, 4);
+  ctx.lineTo(8, 18); ctx.lineTo(4, 18); ctx.lineTo(4, 8); ctx.lineTo(0, 8);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#5a3a10'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.restore();
+}
+
+function drawRivet(x, y){
+  const g = ctx.createRadialGradient(x-1, y-1, 0, x, y, 4);
+  g.addColorStop(0, '#ffe090'); g.addColorStop(0.5, '#c8a050'); g.addColorStop(1, '#5a3a10');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#2a1808'; ctx.lineWidth = 1; ctx.stroke();
+}
+
+function drawTopPanel(){
+  drawPanelFrame(0, 0, canvas.width, TOP_PANEL_H, {
+    top:'#5a3a18', mid:'#3a2010', lowMid:'#1a0f05', bottom:'#0a0500'
+  });
+  ctx.fillStyle = '#8a6a30';
+  ctx.fillRect(0, TOP_PANEL_H, canvas.width, 2);
+
+  ctx.textBaseline = 'middle';
+  const cy = TOP_PANEL_H/2 + 2;
+
+  ctx.save();
+  ctx.translate(30, cy);
+  const gg = ctx.createRadialGradient(-3,-3,0,0,0,12);
+  gg.addColorStop(0, '#fff5c0'); gg.addColorStop(0.5, '#ffd070'); gg.addColorStop(1, '#8a5a20');
+  ctx.fillStyle = gg;
+  ctx.beginPath(); ctx.arc(0,0,12,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#3a2010'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = '#5a3a10'; ctx.font = 'bold 14px serif'; ctx.textAlign = 'center';
+  ctx.fillText('₲', 0, 1);
+  ctx.restore();
+
+  ctx.fillStyle = '#ffd070';
+  ctx.font = 'bold 20px Trebuchet MS, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+  ctx.strokeText(progress.gold, 50, cy);
+  ctx.fillText(progress.gold, 50, cy);
+
+  ctx.fillStyle = '#c8a050';
+  ctx.font = 'bold 16px Trebuchet MS, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+  const levelStr = 'Уровень ' + (currentLevelIndex+1) + ' / ' + LEVELS.length + ' — ' + level.name;
+  ctx.strokeText(levelStr, canvas.width/2, cy);
+  ctx.fillText(levelStr, canvas.width/2, cy);
+
+  const orcs = units.filter(u=>u.team==='orc'&&u.alive).length;
+  const enemies = units.filter(u=>u.team==='enemy'&&u.alive).length;
+  ctx.textAlign = 'right';
+  ctx.fillStyle = '#c8e0ff';
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+  const countStr = 'Орки: ' + orcs + '  |  Враги: ' + enemies;
+  ctx.strokeText(countStr, canvas.width - 20, cy);
+  ctx.fillText(countStr, canvas.width - 20, cy);
+
+  ctx.textBaseline = 'alphabetic';
+}
+
+function drawInitiativeBar(){
+  const order = units.filter(u => u.alive).slice().sort((a,b) => {
+    const aCur = a.id === currentUnitId ? -1 : (a.hasActed ? 1 : 0);
+    const bCur = b.id === currentUnitId ? -1 : (b.hasActed ? 1 : 0);
+    if(aCur !== bCur) return aCur - bCur;
+    return (b.level||1) - (a.level||1);
+  }).slice(0, 8);
+
+  const size = 42, gap = 4;
+  const barW = size + 16;
+  const barX = canvas.width - barW - 8;
+  const barY = TOP_PANEL_H + 8;
+  const barH = Math.max(1, order.length) * (size + gap) + 16;
+
+  drawPanelFrame(barX, barY, barW, barH, {
+    top:'#4a3010', mid:'#2a1808', lowMid:'#1a0f05', bottom:'#0a0500'
+  });
+
+  order.forEach((u, i) => {
+    const x = barX + 8;
+    const y = barY + 8 + i*(size+gap);
+    const isCurrent = u.id === currentUnitId;
+    const frame = ctx.createLinearGradient(x, y, x, y+size);
+    frame.addColorStop(0, isCurrent ? '#ffd070' : '#6a4a20');
+    frame.addColorStop(1, isCurrent ? '#a06020' : '#2a1808');
+    ctx.fillStyle = frame;
+    ctx.fillRect(x-2, y-2, size+4, size+4);
+    ctx.fillStyle = u.team === 'orc' ? '#3a2a1a' : '#1a0f1a';
+    ctx.fillRect(x, y, size, size);
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x, y, size, size); ctx.clip();
+    ctx.translate(x + size/2, y + size/2 + 8);
+    ctx.scale(0.55, 0.55);
+    const mini = { ...u, aimAngle:0, anim:{blink:0, breathPhase:time*0.05, walkCycle:0, recoil:0, hitFlash:0} };
+    const drawFn = ({ orc:drawOrc, troll:drawTroll, goblin:drawGoblin, ogre:drawOgre,
+      humans:drawHuman, gnomes:drawGnome, dwarves:drawDwarf,
+      merfolk:drawMerfolk, elves:drawElf, ogres:drawOgre })[u.race] || drawHuman;
+    drawFn(mini, 0, 0, 0, 0, mini.anim);
+    ctx.restore();
+    if(u.hasActed){ ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(x, y, size, size); }
+    if(isCurrent){
+      const pulse = 0.6 + 0.4*Math.sin(time*0.15);
+      ctx.strokeStyle = `rgba(255,220,120,${pulse})`; ctx.lineWidth = 2;
+      ctx.strokeRect(x-2, y-2, size+4, size+4);
+    }
+    ctx.fillStyle = u.team === 'orc' ? '#ffd070' : '#c8e0ff';
+    ctx.font = 'bold 8px Trebuchet MS, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+    const lbl = u.name.length > 8 ? u.name.slice(0,7) + '…' : u.name;
+    ctx.strokeText(lbl, x + size/2, y + size + 10);
+    ctx.fillText(lbl, x + size/2, y + size + 10);
+  });
+}
+
+function drawMinimap(){
+  const order = units.filter(u => u.alive).slice(0, 8);
+  const initH = Math.max(1, order.length) * (42 + 4) + 16;
+  const size = 130;
+  const x = canvas.width - size - 8;
+  const y = TOP_PANEL_H + 8 + initH + 8;
+
+  drawPanelFrame(x, y, size, size, { top:'#4a3010', mid:'#2a1808', lowMid:'#1a0f05', bottom:'#0a0500' });
+  const inner = size - 12;
+  const ix = x + 6, iy = y + 6;
+  const bg = ctx.createLinearGradient(0, iy, 0, iy+inner);
+  bg.addColorStop(0, level.sky[0]); bg.addColorStop(1, level.groundEdge);
+  ctx.fillStyle = bg;
+  ctx.fillRect(ix, iy, inner, inner);
+  if(terrain.length > 0){
+    ctx.fillStyle = level.ground;
+    ctx.beginPath();
+    ctx.moveTo(ix, iy+inner);
+    for(let i=0;i<terrain.length;i+=6){
+      const p = terrain[i];
+      const sx = ix + (p.x / WORLD_WIDTH) * inner;
+      const sy = iy + ((p.y - WORLD_HEIGHT*0.3) / (WORLD_HEIGHT*0.7)) * inner;
+      ctx.lineTo(sx, sy);
+    }
+    ctx.lineTo(ix+inner, iy+inner);
+    ctx.closePath(); ctx.fill();
+  }
+  for(const u of units){
+    if(!u.alive) continue;
+    const sx = ix + (u.x / WORLD_WIDTH) * inner;
+    const sy = iy + ((u.y - WORLD_HEIGHT*0.3) / (WORLD_HEIGHT*0.7)) * inner;
+    ctx.fillStyle = u.team === 'orc' ? '#ffd070' : '#ff5050';
+    ctx.beginPath(); ctx.arc(sx, sy, 2.5, 0, Math.PI*2); ctx.fill();
+    if(u.id === currentUnitId){
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(sx, sy, 4, 0, Math.PI*2); ctx.stroke();
+    }
+  }
+  ctx.strokeStyle = 'rgba(255,220,120,0.5)'; ctx.lineWidth = 1;
+  ctx.strokeRect(ix, iy, inner, inner);
+}
+
+function drawJournalPanel(){
+  const w = 200;
+  const x = canvas.width - w - 8;
+  const order = units.filter(u => u.alive).slice(0, 8);
+  const initH = Math.max(1, order.length) * (42 + 4) + 16;
+  const miniH = 130 + 8;
+  const y = TOP_PANEL_H + 8 + initH + 8 + miniH + 8;
+  const bottomY = canvas.height - BOTTOM_PANEL_H - 8;
+  const h = Math.min(180, bottomY - y - 8);
+  if(h < 60) return;
+
+  drawPanelFrame(x, y, w, h, { top:'#4a3010', mid:'#2a1808', lowMid:'#1a0f05', bottom:'#0a0500' });
+  ctx.fillStyle = '#c8a050';
+  ctx.font = 'bold 12px Trebuchet MS, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('Журнал', x + 10, y + 18);
+
+  ctx.font = '10px Trebuchet MS, sans-serif';
+  let jy = y + 34;
+  const maxJ = Math.floor((h - 40) / 13);
+  for(let i=0;i<Math.min(maxJ, journal.length);i++){
+    const j = journal[i];
+    ctx.fillStyle = j.color || '#d0b080';
+    ctx.textAlign = 'left';
+    ctx.fillText('• ' + j.text.slice(0, 30), x + 10, jy);
+    jy += 13;
+  }
+}
+
+function drawBottomPanel(){
+  const y0 = canvas.height - BOTTOM_PANEL_H;
+  drawPanelFrame(0, y0, canvas.width, BOTTOM_PANEL_H, {
+    top:'#5a3a18', mid:'#3a2010', lowMid:'#1a0f05', bottom:'#0a0500'
+  });
+
+  const cur = getCurrentUnit();
+  const padX = 14;
+  const padY = 10;
+  const portraitSize = BOTTOM_PANEL_H - padY*2;
+
+  const portX = padX;
+  const portY = y0 + padY;
+  drawPortraitFrame(portX-4, portY-4, portraitSize+8, portraitSize+8);
+  const pbg = ctx.createRadialGradient(portX + portraitSize/2, portY + portraitSize/2, 10,
+    portX + portraitSize/2, portY + portraitSize/2, portraitSize);
+  pbg.addColorStop(0, cur && cur.team === 'orc' ? '#3a2a1a' : '#1a1a2a');
+  pbg.addColorStop(1, '#0a0500');
+  ctx.fillStyle = pbg;
+  ctx.fillRect(portX, portY, portraitSize, portraitSize);
+
+  if(cur && cur.alive){
+    ctx.save();
+    ctx.beginPath(); ctx.rect(portX, portY, portraitSize, portraitSize); ctx.clip();
+    ctx.translate(portX + portraitSize/2, portY + portraitSize/2 + portraitSize*0.28);
+    ctx.scale(portraitSize/90, portraitSize/90);
+    const mini = { ...cur, aimAngle: 0, anim:{blink:0, breathPhase:time*0.06, walkCycle:0, recoil:0, hitFlash:0} };
+    const drawFn = ({ orc:drawOrc, troll:drawTroll, goblin:drawGoblin, ogre:drawOgre,
+      humans:drawHuman, gnomes:drawGnome, dwarves:drawDwarf,
+      merfolk:drawMerfolk, elves:drawElf, ogres:drawOgre })[cur.race] || drawHuman;
+    drawFn(mini, 0, 0, 0, 0, mini.anim);
+    ctx.restore();
+
+    ctx.fillStyle = '#ffd070';
+    ctx.font = 'bold 12px Trebuchet MS, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+    ctx.strokeText(cur.name, portX + portraitSize/2, portY + portraitSize + 16);
+    ctx.fillText(cur.name, portX + portraitSize/2, portY + portraitSize + 16);
+  }
+
+  const abStartX = portX + portraitSize + 20;
+  const abStartY = y0 + padY;
+  const abSize = 44, abGap = 6;
+  const cols = 4;
+
+  abilityRects = [];
+  if(cur && cur.team === 'orc' && cur.alive){
+    cur.abilities.forEach((key, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const cx = abStartX + col*(abSize+abGap) + abSize/2;
+      const cy = abStartY + row*(abSize+abGap) + abSize/2;
+      const cd = cur.abilityCooldowns[key] || 0;
+      const hovered = mouse.worldX >= cx-abSize/2 && mouse.worldX <= cx+abSize/2 &&
+                      mouse.worldY >= cy-abSize/2 && mouse.worldY <= cy+abSize/2;
+      const active = (key==='invisibility' && cur.invisible) ||
+                     (key==='stoneskin' && cur.invulnTimer > 0) ||
+                     (key==='burrow' && cur.burrowedTimer > 0) ||
+                     (key==='bloodlust' && cur.rageTimer > 0);
+      drawAbilityIcon(key, cx, cy, abSize, cd, active, hovered);
+      abilityRects.push({ key, cx, cy, r: abSize/2 });
+    });
+    for(let i = cur.abilities.length; i < cols*2; i++){
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const cx = abStartX + col*(abSize+abGap) + abSize/2;
+      const cy = abStartY + row*(abSize+abGap) + abSize/2;
+      drawEmptyAbilitySlot(cx, cy, abSize);
+    }
+  } else if(cur){
+    for(let i = 0; i < cols*2; i++){
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const cx = abStartX + col*(abSize+abGap) + abSize/2;
+      const cy = abStartY + row*(abSize+abGap) + abSize/2;
+      drawEmptyAbilitySlot(cx, cy, abSize);
+    }
+  }
+
+  if(cur && cur.team === 'orc'){
+    const infoX = abStartX + cols*(abSize+abGap) + 20;
+    const hpW = 190, hpH = 14;
+    const hpY = y0 + padY + 4;
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(infoX-1, hpY-1, hpW+2, hpH+2);
+    const hp = cur.health / cur.maxHealth;
+    const hpGrad = ctx.createLinearGradient(infoX, hpY, infoX, hpY+hpH);
+    hpGrad.addColorStop(0, hp>0.6?'#70e070':(hp>0.3?'#ffb040':'#ff5050'));
+    hpGrad.addColorStop(1, hp>0.6?'#208a20':(hp>0.3?'#8a5a00':'#8a0000'));
+    ctx.fillStyle = hpGrad;
+    ctx.fillRect(infoX, hpY, hpW*hp, hpH);
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.fillRect(infoX, hpY, hpW*hp, 3);
+    ctx.strokeStyle = '#c8a050'; ctx.lineWidth = 2;
+    ctx.strokeRect(infoX-1, hpY-1, hpW+2, hpH+2);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 11px Trebuchet MS, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+    const hpText = Math.round(cur.health) + ' / ' + cur.maxHealth;
+    ctx.strokeText(hpText, infoX + hpW/2, hpY + hpH - 3);
+    ctx.fillText(hpText, infoX + hpW/2, hpY + hpH - 3);
+
+    const xpY = hpY + hpH + 3;
+    const xpH = 5;
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(infoX-1, xpY-1, hpW+2, xpH+2);
+    const need = cur.level * 100;
+    const xp = cur.xp / need;
+    const xpGrad = ctx.createLinearGradient(infoX, xpY, infoX, xpY+xpH);
+    xpGrad.addColorStop(0, '#c080ff'); xpGrad.addColorStop(1, '#5a20a0');
+    ctx.fillStyle = xpGrad;
+    ctx.fillRect(infoX, xpY, hpW*xp, xpH);
+    ctx.strokeStyle = '#5a3a10'; ctx.lineWidth = 1;
+    ctx.strokeRect(infoX-1, xpY-1, hpW+2, xpH+2);
+
+    const infoY = xpY + xpH + 16;
+    ctx.fillStyle = '#c8a050';
+    ctx.font = 'bold 12px Trebuchet MS, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Ур. ' + cur.level + ' ' + (cur.orcClass ? className(cur.orcClass) : ''), infoX, infoY);
+    ctx.fillStyle = '#ddd';
+    ctx.font = '11px Trebuchet MS, sans-serif';
+    const wname = weaponName(cur.weapon) + (cur.ammo > 0 ? ' (' + cur.ammo + ')' : '');
+    ctx.fillText('Оружие: ' + wname, infoX, infoY + 15);
+    const moveLeft = Math.floor(cur.moveRangeMax - cur.moveRangeUsed);
+    ctx.fillText('Ход: ' + moveLeft + ' / ' + cur.moveRangeMax, infoX, infoY + 30);
+
+    // кнопка "Пропустить ход"
+    const btnW = 130, btnH = 26;
+    const btnX = infoX + hpW + 16;
+    const btnY = hpY + 2;
+    skipBtnRect = { x: btnX, y: btnY, w: btnW, h: btnH };
+    drawWoodButton(btnX, btnY, btnW, btnH, 'Пропустить ход (E)');
+  } else {
+    skipBtnRect = null;
+  }
+}
+
+function drawPortraitFrame(x, y, w, h){
+  const stone = ctx.createLinearGradient(0, y, 0, y+h);
+  stone.addColorStop(0, '#8a7a60');
+  stone.addColorStop(0.5, '#4a3a28');
+  stone.addColorStop(1, '#2a1a10');
+  ctx.fillStyle = stone;
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = '#c8a050'; ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, w, h);
+  drawRivet(x+4, y+4); drawRivet(x+w-4, y+4);
+  drawRivet(x+4, y+h-4); drawRivet(x+w-4, y+h-4);
+}
+
+function drawEmptyAbilitySlot(cx, cy, size){
+  const r = size/2;
+  ctx.fillStyle = 'rgba(20,10,5,0.7)';
+  ctx.fillRect(cx-r, cy-r, size, size);
+  ctx.strokeStyle = 'rgba(120,90,40,0.5)';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(cx-r+1, cy-r+1, size-2, size-2);
+}
+
+function drawWoodButton(x, y, w, h, text){
+  const g = ctx.createLinearGradient(0, y, 0, y+h);
+  g.addColorStop(0, '#a07040'); g.addColorStop(0.5, '#6a4a20'); g.addColorStop(1, '#3a2010');
+  ctx.fillStyle = g;
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = '#2a1808'; ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, w, h);
+  ctx.strokeStyle = '#c8a050'; ctx.lineWidth = 1;
+  ctx.strokeRect(x+2, y+2, w-4, h-4);
+  drawRivet(x+8, y+h/2); drawRivet(x+w-8, y+h/2);
+  ctx.fillStyle = '#ffd070';
+  ctx.font = 'bold 12px Trebuchet MS, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+  ctx.strokeText(text, x + w/2, y + h/2 + 1);
+  ctx.fillText(text, x + w/2, y + h/2 + 1);
+  ctx.textBaseline = 'alphabetic';
+}
+
+function drawAbilityIcon(key, cx, cy, size, cooldown, active, hovered){
+  const ab = ABILITIES[key];
+  if(!ab) return;
+  const r = size/2;
+  const frameGrad = ctx.createLinearGradient(cx-r, cy-r, cx+r, cy+r);
+  frameGrad.addColorStop(0, '#ffe090');
+  frameGrad.addColorStop(0.5, '#a07840');
+  frameGrad.addColorStop(1, '#5a3a1a');
+  ctx.fillStyle = frameGrad;
+  ctx.fillRect(cx-r-3, cy-r-3, size+6, size+6);
+  ctx.strokeStyle = '#2a1808'; ctx.lineWidth = 1.5;
+  ctx.strokeRect(cx-r-3, cy-r-3, size+6, size+6);
+  const grad = ctx.createLinearGradient(cx-r, cy-r, cx+r, cy+r);
+  grad.addColorStop(0, ab.color1);
+  grad.addColorStop(1, ab.color2);
+  ctx.fillStyle = grad;
+  ctx.fillRect(cx-r, cy-r, size, size);
+  ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 2;
+  ctx.strokeRect(cx-r+1, cy-r+1, size-2, size-2);
+  drawAbilityGlyph(ab.icon, cx, cy, size);
+  if(cooldown > 0){
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(cx-r, cy-r, size, size);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold ' + Math.floor(size*0.55) + 'px Trebuchet MS, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+    ctx.strokeText(cooldown, cx, cy);
+    ctx.fillText(cooldown, cx, cy);
+    ctx.textBaseline = 'alphabetic';
+  }
+  if(hovered && cooldown === 0){
+    ctx.strokeStyle = '#fff8c0'; ctx.lineWidth = 2;
+    ctx.shadowColor = '#ffd070'; ctx.shadowBlur = 12;
+    ctx.strokeRect(cx-r-3, cy-r-3, size+6, size+6);
+    ctx.shadowBlur = 0;
+  }
+  if(active){
+    const pulse = 0.5 + 0.5*Math.sin(time*0.2);
+    ctx.strokeStyle = `rgba(255,220,120,${pulse})`; ctx.lineWidth = 2;
+    ctx.strokeRect(cx-r-4, cy-r-4, size+8, size+8);
+  }
+}
+
+function drawAbilityGlyph(kind, cx, cy, size){
+  const s = size/2;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  if(kind === 'rage'){
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(-s*0.6, -s*0.6); ctx.lineTo(s*0.3, s*0.3);
+    ctx.moveTo(s*0.6, -s*0.6); ctx.lineTo(-s*0.3, s*0.3);
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.moveTo(-s*0.7, -s*0.7); ctx.lineTo(-s*0.3, -s*0.9); ctx.lineTo(-s*0.3, -s*0.4); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(s*0.7, -s*0.7); ctx.lineTo(s*0.3, -s*0.9); ctx.lineTo(s*0.3, -s*0.4); ctx.closePath(); ctx.fill();
+  } else if(kind === 'warcry'){
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5;
+    for(let i=0;i<3;i++){
+      ctx.beginPath();
+      ctx.arc(-s*0.3, 0, s*0.3 + i*s*0.22, -Math.PI/3, Math.PI/3);
+      ctx.stroke();
+    }
+  } else if(kind === 'heal'){
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(-s*0.15, -s*0.6, s*0.3, s*1.2);
+    ctx.fillRect(-s*0.6, -s*0.15, s*1.2, s*0.3);
+  } else if(kind === 'burrow'){
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(0, s*0.2, s*0.6, Math.PI*1.05, Math.PI*1.95);
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(0, -s*0.3, s*0.12, 0, Math.PI*2); ctx.fill();
+  } else if(kind === 'invis'){
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.ellipse(0, 0, s*0.7, s*0.45, 0, 0, Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, s*0.2, 0, Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-s*0.7, s*0.7); ctx.lineTo(s*0.7, -s*0.7); ctx.stroke();
+  } else if(kind === 'smash'){
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(-s*0.6, -s*0.4, s*1.2, s*0.8);
+  } else if(kind === 'prayer'){
+    const glow = 0.7 + 0.3*Math.sin(time*0.15);
+    ctx.shadowColor = '#fff8c0'; ctx.shadowBlur = 12*glow;
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, -s*0.8); ctx.lineTo(0, s*0.8);
+    ctx.moveTo(-s*0.5, -s*0.2); ctx.lineTo(s*0.5, -s*0.2);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  } else if(kind === 'rejuv'){
+    ctx.fillStyle = '#8aff8a';
+    ctx.beginPath(); ctx.ellipse(0, 0, s*0.35, s*0.7, Math.PI/4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#aaffff';
+    ctx.beginPath(); ctx.arc(s*0.4, s*0.5, s*0.18, 0, Math.PI*2); ctx.fill();
+  } else if(kind === 'teleport'){
+    ctx.strokeStyle = '#e0b0ff'; ctx.lineWidth = 2.5;
+    for(let i=0;i<3;i++){
+      ctx.beginPath(); ctx.ellipse(0, 0, s*(0.3+i*0.25), s*(0.5+i*0.15), 0, 0, Math.PI*2); ctx.stroke();
+    }
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(0, 0, s*0.15, 0, Math.PI*2); ctx.fill();
+  } else if(kind === 'stone'){
+    ctx.fillStyle = '#c8c8c8';
+    ctx.beginPath();
+    ctx.moveTo(-s*0.7, -s*0.4); ctx.lineTo(s*0.7, -s*0.5);
+    ctx.lineTo(s*0.6, s*0.6); ctx.lineTo(-s*0.6, s*0.5);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#4a4a4a'; ctx.lineWidth = 1.5; ctx.stroke();
+  } else {
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(0, 0, s*0.4, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawTooltip(){
+  if(!tooltip) return;
+  const pad = 10;
+  ctx.font = 'bold 13px Trebuchet MS, sans-serif';
+  const titleW = ctx.measureText(tooltip.title).width;
+  ctx.font = '11px Trebuchet MS, sans-serif';
+  const descW = ctx.measureText(tooltip.desc).width;
+  const extraW = ctx.measureText(tooltip.extra).width;
+  const w = Math.max(titleW, descW, extraW) + pad*2 + 10;
+  const h = 70;
+  let x = tooltip.x - w/2;
+  let y = tooltip.y - h;
+  if(x < 10) x = 10;
+  if(x + w > canvas.width - 10) x = canvas.width - w - 10;
+  if(y < TOP_PANEL_H + 10) y = tooltip.y + 30;
+  const bg = ctx.createLinearGradient(0, y, 0, y+h);
+  bg.addColorStop(0, 'rgba(40,25,10,0.97)');
+  bg.addColorStop(1, 'rgba(15,8,3,0.97)');
+  ctx.fillStyle = bg;
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = '#c8a050'; ctx.lineWidth = 2;
+  ctx.strokeRect(x, y, w, h);
+  ctx.strokeStyle = '#5a3a10'; ctx.lineWidth = 1;
+  ctx.strokeRect(x+3, y+3, w-6, h-6);
+  ctx.fillStyle = '#ffd070';
+  ctx.font = 'bold 13px Trebuchet MS, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+  ctx.strokeText(tooltip.title, x + pad, y + 20);
+  ctx.fillText(tooltip.title, x + pad, y + 20);
+  ctx.fillStyle = '#ddd';
+  ctx.font = '11px Trebuchet MS, sans-serif';
+  ctx.fillText(tooltip.desc, x + pad, y + 38);
+  ctx.fillStyle = '#a0e0a0';
+  ctx.fillText(tooltip.extra, x + pad, y + 54);
+}
+
+// ============================================================
+//  ЭКРАНЫ
+// ============================================================
+const overlay = document.getElementById('overlay');
+const overlayPanel = document.getElementById('overlayPanel');
+
+function showMainMenu(){
+  overlay.classList.remove('hidden');
+  let html = '<h1>Orcs VS Everybody</h1>';
+  html += '<p style="font-size:15px;color:#e0b060">Кампания из 6 уровней. Орки идут по миру, собирая союзников.</p>';
+  html += '<p style="font-size:12px;color:#aaa">Управление: A/D — ходьба, W — прыжок, ЛКМ зажать — прицел, отпустить — выстрел. Клавиши 1-4 — выбор юнита, E — пропуск, Tab — оружие.</p>';
+  html += '<p style="font-size:13px;color:#ffd070">Золото: ' + progress.gold + '</p>';
+  html += '<div class="levels">';
+  LEVELS.forEach((l, i) => {
+    const cls = i === currentLevelIndex ? 'current' : (progress.completed.indexOf(i) >= 0 ? 'done' : '');
+    html += `<div class="lvl ${cls}" data-idx="${i}">${i+1}. ${l.name}</div>`;
+  });
+  html += '</div>';
+  html += '<button id="btnStart" style="margin-top:16px">Начать кампанию</button>';
+  html += '<button id="btnReset" style="margin-top:16px;font-size:13px;background:linear-gradient(180deg,#a04040,#5a1010);color:#fff">Сбросить прогресс</button>';
+  overlayPanel.innerHTML = html;
+
+  overlayPanel.querySelectorAll('.lvl').forEach(el => {
+    el.addEventListener('click', () => {
+      currentLevelIndex = parseInt(el.dataset.idx);
+      startLevel();
+    });
+  });
+  document.getElementById('btnStart').addEventListener('click', () => {
+    currentLevelIndex = 0;
+    startLevel();
+  });
+  document.getElementById('btnReset').addEventListener('click', () => {
+    progress = { gold:0, reputation:{}, upgrades:{hp:0,dmg:0,speed:0,gold:0}, completed:[] };
+    currentLevelIndex = 0;
+    saveProgress();
+    showMainMenu();
+  });
+}
+
+function showLevelComplete(){
+  overlay.classList.remove('hidden');
+  const isLast = currentLevelIndex >= LEVELS.length - 1;
+  let html = `<h1>Победа!</h1>`;
+  html += `<p>${level.name} — очищен от врагов.</p>`;
+  html += `<p style="color:#ffd070;font-size:18px">Получено золота: +${level.reward || 100}</p>`;
+  html += `<p class="shop-gold">Всего золота: ${progress.gold}</p>`;
+
+  if(isLast){
+    html += `<p style="color:#ffd070;font-weight:bold;font-size:18px;margin-top:14px">Вы прошли всю кампанию! Орки победили всех!</p>`;
+    html += `<button id="btnMenu">В главное меню</button>`;
+  } else {
+    html += '<h2>Магазин перед следующим уровнем</h2>';
+    html += '<div class="shop-grid">';
+    const items = [
+      { key:'hp',    name:'Здоровье +10',   desc:'Каждому орку +10 к макс. HP', price: 80, max: 5 },
+      { key:'dmg',   name:'Урон +10%',      desc:'Все атаки орков +10%',        price: 100, max: 5 },
+      { key:'speed', name:'Скорость +5%',   desc:'Движение орков быстрее',      price: 90,  max: 3 },
+      { key:'gold',  name:'Добыча +20%',    desc:'Больше золота за врагов',     price: 150, max: 3 }
+    ];
+    items.forEach(it => {
+      const lvl = progress.upgrades[it.key] || 0;
+      const disabled = lvl >= it.max || progress.gold < it.price;
+      html += `<div class="shop-item ${disabled ? 'disabled' : ''}">
+        <h3>${it.name} (ур. ${lvl}/${it.max})</h3>
+        <p>${it.desc}</p>
+        <p class="price">Цена: ${it.price} золота</p>
+        <button data-key="${it.key}" data-price="${it.price}" data-max="${it.max}" ${disabled?'disabled':''}>Купить</button>
+      </div>`;
+    });
+    html += '</div>';
+    html += '<button id="btnNext" style="margin-top:16px">Следующий уровень</button>';
+    html += '<button id="btnMenu" style="margin-top:16px">В главное меню</button>';
+  }
+  overlayPanel.innerHTML = html;
+
+  overlayPanel.querySelectorAll('.shop-item button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(btn.disabled) return;
+      const key = btn.dataset.key;
+      const price = parseInt(btn.dataset.price);
+      const max = parseInt(btn.dataset.max);
+      const cur = progress.upgrades[key] || 0;
+      if(progress.gold >= price && cur < max){
+        progress.gold -= price;
+        progress.upgrades[key] = cur + 1;
+        saveProgress();
+        SFX.click();
+        showLevelComplete();
+      }
+    });
+  });
+
+  if(!isLast){
+    document.getElementById('btnNext').addEventListener('click', () => {
+      currentLevelIndex++;
+      startLevel();
+    });
+  }
+  document.getElementById('btnMenu').addEventListener('click', showMainMenu);
+}
+
+function showDefeat(){
+  overlay.classList.remove('hidden');
+  SFX.lose();
+  overlayPanel.innerHTML = `
+    <h1>Поражение...</h1>
+    <p>Орки пали в бою. ${level.name} устоял.</p>
+    <button id="btnRetry">Повторить уровень</button>
+    <button id="btnMenu">В главное меню</button>
+  `;
+  document.getElementById('btnRetry').addEventListener('click', startLevel);
+  document.getElementById('btnMenu').addEventListener('click', showMainMenu);
+}
+
+function startLevel(){
+  overlay.classList.add('hidden');
+  initAudio();
+  level = LEVELS[currentLevelIndex];
+  resizeCanvas();
+  generateTerrain();
+  createUnits();
+  currentTeam = 'orc';
+  const first = getTeamUnits('orc')[0];
+  if(!first){ showMainMenu(); return; }
+  currentUnitId = first.id;
+  turnState = 'aiming';
+  winner = null;
+  projectile = null; explosion = null;
+  particles = []; decals = [];
+  pendingEnd = false; endTimer = 0;
+  inputLockUntil = 0; keys = {};
+  aiThinking = false; charging = false; mouse.down = false;
+  teleportMode = false; healMode = false;
+  journal = [];
+  camShake = 0;
+  addJournal('=== ' + level.name + ' ===', '#ffd070');
+  addJournal(level.hint, '#88ccff');
+  gameMessage = level.name + ' — ваш ход!';
+  messageTimer = 120;
+  saveProgress();
+
+  if(!gameLoopRunning){ gameLoopRunning = true; gameLoop(); }
+}
+
+// ============================================================
+//  ВВОД
+// ============================================================
+function screenToWorld(sx, sy){
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  return { x: (sx - rect.left) * scaleX, y: (sy - rect.top) * scaleY };
+}
+
+function trySelectAlly(wx, wy){
+  if(turnState !== 'aiming') return false;
+  if(winner) return false;
+  const unit = getCurrentUnit();
+  if(!unit || unit.team !== 'orc') return false;
+  if(mouse.down) return false;
+  const clicked = units.find(u => u.alive && u.team === unit.team && Math.hypot(u.x-wx, u.y-wy) < UNIT_RADIUS + 10);
+  if(!clicked) return false;
+  if(clicked.id === currentUnitId) return false;
+  if(clicked.hasActed){
+    gameMessage = clicked.name + ' уже ходил';
+    messageTimer = 60; return true;
+  }
+  currentUnitId = clicked.id;
+  gameMessage = 'Выбран: ' + clicked.name;
+  messageTimer = 60;
+  SFX.click();
+  return true;
+}
+
+canvas.addEventListener('mousemove', e => {
+  const w = screenToWorld(e.clientX, e.clientY);
+  mouse.worldX = w.x; mouse.worldY = w.y;
+});
+
+canvas.addEventListener('mousedown', e => {
+  if(e.button !== 0) return;
+  initAudio();
+  const w = screenToWorld(e.clientX, e.clientY);
+
+  // Нижняя панель
+  if(w.y >= canvas.height - BOTTOM_PANEL_H){
+    // кнопка "Пропустить ход"
+    if(skipBtnRect &&
+       w.x >= skipBtnRect.x && w.x <= skipBtnRect.x + skipBtnRect.w &&
+       w.y >= skipBtnRect.y && w.y <= skipBtnRect.y + skipBtnRect.h){
+      SFX.click();
+      endTurn();
+      return;
+    }
+    // способности
+    for(const r of abilityRects){
+      if(Math.hypot(w.x - r.cx, w.y - r.cy) <= r.r + 4){
+        const unit = getCurrentUnit();
+        if(unit && unit.team === 'orc'){ SFX.click(); tryUseAbility(unit, r.key); }
+        return;
+      }
+    }
+    return;
+  }
+
+  // Верхняя панель
+  if(w.y <= TOP_PANEL_H) return;
+
+  // Телепорт
+  if(teleportMode){
+    const unit = units.find(u => u.id === teleportUnitId);
+    if(unit && unit.alive){
+      if(tryTeleportTo(unit, w.x, getGroundY(w.x) - UNIT_RADIUS)){
+        unit.abilityCooldowns['teleport'] = ABILITIES.teleport.cooldown;
+        unit.usedAbilityThisTurn = true; unit.hasActed = true;
+        addJournal(unit.name + ' телепортируется!', '#c080ff');
+        teleportMode = false; teleportUnitId = null;
+        endTurn();
+      } else {
+        gameMessage = 'Нельзя телепортироваться сюда!';
+        messageTimer = 60;
+      }
+    } else { teleportMode = false; teleportUnitId = null; }
+    return;
+  }
+
+  // Лечение
+  if(healMode){
+    const healer = units.find(u => u.id === healUnitId);
+    const target = units.find(u => u.alive && u.team === 'orc' && Math.hypot(w.x - u.x, w.y - u.y) < UNIT_RADIUS + 14);
+    if(healer && target){ tryHealAlly(healer, target); healMode = false; healUnitId = null; }
+    else { healMode = false; healUnitId = null; gameMessage = 'Отменено'; messageTimer = 60; }
+    return;
+  }
+
+  if(trySelectAlly(w.x, w.y)) return;
+
+  mouse.down = true;
+  if(turnState === 'aiming'){
+    const unit = getCurrentUnit();
+    if(!unit || unit.team !== 'orc' || unit.sleepTimer) return;
+    if(['axe','sword','claw','club'].includes(unit.weapon)){
+      fireWeapon(unit);
+      mouse.down = false;
+    }
+  }
+});
+
+canvas.addEventListener('mouseup', e => {
+  if(e.button !== 0) return;
+  const wasDown = mouse.down;
+  mouse.down = false;
+  if(wasDown && turnState === 'aiming'){
+    const unit = getCurrentUnit();
+    if(unit && unit.team === 'orc' && !unit.sleepTimer &&
+       !['axe','sword','claw','club'].includes(unit.weapon)){
+      fireWeapon(unit);
+    }
+  }
+});
+
+canvas.addEventListener('mouseleave', () => { mouse.down = false; });
+canvas.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  if(teleportMode){ teleportMode = false; teleportUnitId = null; }
+  if(healMode){ healMode = false; healUnitId = null; }
+});
+
+window.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  const unit = getCurrentUnit();
+  if(!unit || unit.team !== 'orc') return;
+  if(turnState !== 'aiming') return;
+  if(e.key === ' '){
+    e.preventDefault();
+    const gy = getGroundY(unit.x);
+    const leftY = getGroundY(unit.x - 35);
+    const rightY = getGroundY(unit.x + 35);
+    const inPit = gy > leftY + 8 && gy > rightY + 8;
+    if(inPit){ unit.invisible = true; endTurn(); }
+    else { gameMessage = 'Нужна яма!'; messageTimer = 60; }
+  }
+  if(e.key === 'Tab'){
+    e.preventDefault();
+    const order = ['axe','spear','sling','gun','bomb','bow','staff'];
+    const idx = order.indexOf(unit.weapon);
+    let next = order[(idx+1)%order.length];
+    if(['spear','sling','gun','bomb','bow','staff'].indexOf(next) >= 0 && unit.ammo <= 0){
+      gameMessage = 'Нет боеприпасов'; messageTimer = 60;
+    } else {
+      unit.weapon = next;
+      gameMessage = 'Оружие: ' + weaponName(next);
+      messageTimer = 60;
+    }
+  }
+  if(e.key === 'e' || e.key === 'E' || e.key === 'у' || e.key === 'У'){
+    if(!winner) endTurn();
+  }
+  if(e.key === '1' || e.key === '2' || e.key === '3' || e.key === '4'){
+    const idx = parseInt(e.key) - 1;
+    const orcUnits = units.filter(u => u.team === 'orc' && u.alive);
+    if(orcUnits[idx] && !orcUnits[idx].hasActed){
+      currentUnitId = orcUnits[idx].id;
+      SFX.click();
+    }
+  }
+});
+
+window.addEventListener('keyup', e => { keys[e.key] = false; });
+window.addEventListener('blur', () => { keys = {}; mouse.down = false; });
+
+// ============================================================
+//  РЕСАЙЗ
+// ============================================================
+function resizeCanvas(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  WORLD_WIDTH = canvas.width;
+  WORLD_HEIGHT = canvas.height;
+}
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  generateTerrain();
+  for(const u of units){
+    if(!u.alive) continue;
+    u.y = getGroundY(u.x) - UNIT_RADIUS;
+  }
+});
+
+// ============================================================
+//  ГЛАВНЫЙ ЦИКЛ
+// ============================================================
+function gameLoop(){
+  update();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+function draw(){
+  ctx.save();
+  ctx.translate(camShakeX, camShakeY);
+
+  ctx.clearRect(-20, -20, canvas.width+40, canvas.height+40);
+  drawBackground();
+  drawTerrain();
+  for(const u of units) drawUnit(u);
+  drawProjectiles();
+  drawAim();
+
+  ctx.restore();
+
+  drawTopPanel();
+  drawInitiativeBar();
+  drawMinimap();
+  drawJournalPanel();
+  drawBottomPanel();
+  drawTooltip();
+
+  if(messageTimer > 0 && gameMessage){
+    const k = clamp(messageTimer / 30, 0, 1);
+    ctx.font = 'bold 22px Trebuchet MS, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 4;
+    ctx.fillStyle = `rgba(255,220,120,${k})`;
+    ctx.strokeText(gameMessage, canvas.width/2, canvas.height/2 - 100);
+    ctx.fillText(gameMessage, canvas.width/2, canvas.height/2 - 100);
+  }
+}
+
+// ============================================================
+//  СТАРТ
+// ============================================================
+loadProgress();
+resizeCanvas();
+generateTerrain();
+createUnits();
+showMainMenu();
+
+})();
+</script>
+
+</body></html>
